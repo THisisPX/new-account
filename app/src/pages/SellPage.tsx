@@ -24,6 +24,11 @@ import {
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import ContactPaymentModal from '@/components/ContactPaymentModal';
+import type { LoginTypeCode, SafeBoxType, StaminaLevel, GameAccountSell } from '@/types/account';
+import {
+  calculateRecyclePrice,
+  calculateRentDays,
+} from '@/utils/account';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -65,26 +70,35 @@ const operatorSkins: Record<string, string[]> = {
   '骇爪': ['维什戴尔', '水墨云图'],
 };
 
-// 基础比例表
-const baseRatios: Record<string, Record<string, number>> = {
-  '9grid': { '7': 39, '5-6': 40, '3-4': 41 },
-  '6grid': { '7': 41, '5-6': 42, '3-4': 43 },
-  'other': { '7': 44, '5-6': 44, '3-4': 44 },
-};
-
 export default function SellPage() {
   const pageRef = useRef<HTMLDivElement>(null);
   
   // 表单状态
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    region: string;
+    loginType: LoginTypeCode | '';
+    totalAssets: string;
+    harvardCoins: string;
+    level: string;
+    rank: string;
+    safeBox: SafeBoxType | '';
+    stamina: StaminaLevel | '';
+    trainingLevel: string;
+    rangeLevel: string;
+    awmAmmo: string;
+    banRecord: string;
+    isOwnFace: string;
+    superGuarantee: boolean;
+    note: string;
+  }>({
     region: '',
-    loginType: '',
+    loginType: '' as LoginTypeCode | '',
     totalAssets: '',
     harvardCoins: '',
     level: '',
     rank: '',
-    safeBox: '',
-    stamina: '',
+    safeBox: '' as SafeBoxType | '',
+    stamina: '' as StaminaLevel | '',
     trainingLevel: '',
     rangeLevel: '',
     awmAmmo: '',
@@ -127,14 +141,9 @@ export default function SellPage() {
   useEffect(() => {
     const harvardCoins = parseFloat(formData.harvardCoins);
     if (harvardCoins && harvardCoins >= 50) {
-      let dailyConsume = 8;
-      if (harvardCoins >= 80 && harvardCoins <= 300) {
-        dailyConsume = 10;
-      } else if (harvardCoins > 300) {
-        dailyConsume = 12;
-      }
-      setDailyConsumption(dailyConsume);
-      setRentDays(Math.ceil(harvardCoins / dailyConsume));
+      const { days, dailyConsumption: consumption } = calculateRentDays(harvardCoins);
+      setDailyConsumption(consumption);
+      setRentDays(days);
     } else {
       setDailyConsumption(null);
       setRentDays(null);
@@ -144,58 +153,21 @@ export default function SellPage() {
   // 计算回收价格
   useEffect(() => {
     const harvardCoins = parseFloat(formData.harvardCoins);
-    const safeBox = formData.safeBox;
-    const stamina = formData.stamina;
-    
+    const safeBox = formData.safeBox as SafeBoxType;
+    const stamina = formData.stamina as StaminaLevel;
+
     if (harvardCoins && safeBox && stamina) {
-      const details: string[] = [];
-      
-      // 基础比例
-      const base = baseRatios[safeBox]?.[stamina] || 44;
-      setBaseRatio(base);
-      details.push(`基础比例: 1:${base}`);
-      
-      // 皮肤调整
-      let skinDiscount = 0;
-      const hasWeilongRed = selectedOperatorSkins['威龙']?.some(s => 
-        ['凌霄戍卫', '蛟龙行动', '铁面判官', '壮志凌云', '吴彦祖'].includes(s)
+      const result = calculateRecyclePrice(
+        harvardCoins,
+        safeBox,
+        stamina,
+        selectedKnives,
+        selectedOperatorSkins
       );
-      const hasHonglangRed = selectedOperatorSkins['红狼']?.some(s => 
-        ['蚀金玫瑰'].includes(s)
-      );
-      const hasMaixiaowenRed = selectedOperatorSkins['麦小雯'] && selectedOperatorSkins['麦小雯'].length > 0;
-      const hasKnifeSkin = selectedKnives.length > 0 && !selectedKnives.includes('电锯惊魂');
-      
-      if (hasWeilongRed || hasHonglangRed) {
-        skinDiscount += 2;
-        details.push(`威龙/红狼红皮: -2`);
-      }
-      if (hasMaixiaowenRed) {
-        skinDiscount += 1;
-        details.push(`麦小雯红皮: -1`);
-      }
-      if (hasKnifeSkin) {
-        skinDiscount += 1;
-        details.push(`刀皮(电锯除外): -1`);
-      }
-      
-      // 大额调整
-      let largeAmountAdjustment = 0;
-      if (harvardCoins >= 300) {
-        largeAmountAdjustment = 2;
-        details.push(`大额账号(≥300M): +2`);
-      }
-      
-      // 最终比例
-      const final = base - skinDiscount + largeAmountAdjustment;
-      setFinalRatio(final);
-      details.push(`最终比例: 1:${final}`);
-      
-      // 回收价格 = (M数值 × 100) ÷ N
-      // 例如：200m，比例1:40 → (200 × 100) ÷ 40 = 500元
-      const price = (harvardCoins * 100) / final;
-      setRecyclePrice(price);
-      setPriceDetails(details);
+      setBaseRatio(result.baseRatio);
+      setFinalRatio(result.finalRatio);
+      setRecyclePrice(result.recyclePrice);
+      setPriceDetails(result.details);
     } else {
       setBaseRatio(null);
       setFinalRatio(null);
@@ -205,7 +177,7 @@ export default function SellPage() {
   }, [formData.harvardCoins, formData.safeBox, formData.stamina, selectedKnives, selectedOperatorSkins]);
 
   // 处理表单变化
-  const handleChange = (field: string, value: string | boolean) => {
+  const handleChange = (field: keyof typeof formData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
   
@@ -246,30 +218,35 @@ export default function SellPage() {
     }
     
     setIsSubmitting(true);
-    
-    // 构造提交数据
-    const submitData = {
+
+    // 构造提交数据 - 使用统一的数据结构
+    const submitData: GameAccountSell = {
       id: 'SELL' + Date.now().toString().slice(-6),
       userId: 'USER' + Math.floor(Math.random() * 10000),
       userName: '用户' + Math.floor(Math.random() * 10000),
       harvardCoins: parseFloat(formData.harvardCoins) || 0,
-      rank: formData.rank || '未知',
-      safeBox: formData.safeBox === '9grid' ? '9格安全箱' : formData.safeBox === '6grid' ? '6格安全箱' : '其它安全箱',
-      stamina: formData.stamina === '7' ? '7体' : formData.stamina === '5-6' ? '5-6体' : '3-4体',
+      totalAssets: parseFloat(formData.totalAssets) || parseFloat(formData.harvardCoins) || 0,
+      rank: (formData.rank as GameAccountSell['rank']) || '未知',
+      safeBox: formData.safeBox as SafeBoxType,
+      stamina: formData.stamina as StaminaLevel,
       trainingLevel: formData.trainingLevel || '1级',
       rangeLevel: formData.rangeLevel || '1级',
       awmAmmo: parseInt(formData.awmAmmo) || 0,
-      recyclePrice: recyclePrice || 0,
+      level: parseInt(formData.level) || 0,
+      price: recyclePrice || 0,
       status: 'pending',
       submittedAt: new Date().toLocaleString('zh-CN'),
       region: formData.region,
       server: formData.region === 'QQ区' ? 'QQ' : '微信',
-      loginType: formData.loginType === 'account' ? '账密' : '扫码',
+      loginType: formData.loginType as LoginTypeCode,
       knifeSkins: selectedKnives,
       operatorSkins: selectedOperatorSkins,
       note: formData.note,
       superGuarantee: formData.superGuarantee,
-      images: uploadedImages,
+      banRecord: formData.banRecord || '无封禁记录',
+      isOwnFace: formData.isOwnFace === '是本人',
+      createdAt: new Date().toLocaleString('zh-CN'),
+      updatedAt: new Date().toLocaleString('zh-CN'),
     };
     
     // 保存到 localStorage（模拟后台存储）

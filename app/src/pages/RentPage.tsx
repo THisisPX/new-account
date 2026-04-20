@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  Search, 
-  Filter, 
-  ChevronDown, 
-  ChevronUp, 
+import {
+  Search,
+  Filter,
+  ChevronDown,
+  ChevronUp,
   RotateCcw,
   Shield,
   Sword,
@@ -18,6 +18,10 @@ import {
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import RentContactModal from '@/components/RentContactModal';
+import type { GameAccountRent as Account, GameAccountRent } from '@/types/account';
+import {
+  safeBoxToShortDisplay,
+} from '@/utils/account';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -46,150 +50,159 @@ const operatorSkins: Record<string, string[]> = {
   '骇爪': ['维什戴尔', '水墨云图'],
 };
 
-// 账号数据类型
-interface Account {
-  id: string;
-  date: string;
-  region: string;
-  server: string;
-  loginType: string;
-  rank: string;
-  assets: string;
-  safe: string;
-  awm: string;
-  training: string;
-  range: string;
-  knife: string;
-  knifeExtra: string;
-  operatorSkins: Record<string, string[]>;
-  price: number;
-  deposit: number;
-  note: string;
-}
-
-// 模拟账号数据 - 使用正确的干员皮肤格式
-const mockAccounts: Account[] = [
+// 模拟账号数据 - 使用统一的 GameAccountRent 类型
+const mockAccounts: GameAccountRent[] = [
   {
     id: 'SJZ307642',
-    date: '2026-03-25',
     region: '广东省',
     server: 'QQ',
-    loginType: '账密',
+    loginType: 'account',
     rank: '钻石',
-    assets: '5000万',
-    safe: '3×3顶级安全箱',
-    awm: '70发',
-    training: '7级',
-    range: '6级',
-    knife: '电锯惊魂',
-    knifeExtra: '暗星',
+    harvardCoins: 5,
+    totalAssets: 5,
+    assetsDisplay: '5000万',
+    level: 0,
+    safeBox: '9grid',
+    stamina: '7',
+    awmAmmo: 70,
+    trainingLevel: '7级',
+    rangeLevel: '6级',
+    knifeSkins: ['电锯惊魂', '暗星'],
     operatorSkins: { '露娜': ['黑-天际线'], '无名': ['夜鹰'] },
     price: 765,
     deposit: 559,
     note: '12格卡包，航天巴克...',
+    status: 'active',
+    createdAt: '2026-03-25',
+    updatedAt: '2026-03-25',
   },
   {
     id: 'SJZ308521',
-    date: '2026-03-24',
     region: '浙江省',
     server: '微信',
-    loginType: '扫码',
+    loginType: 'qrcode',
     rank: '黑鹰',
-    assets: '8000万',
-    safe: '3×3顶级安全箱',
-    awm: '120发',
-    training: '7级',
-    range: '7级',
-    knife: '怜悯',
-    knifeExtra: '影锋',
+    harvardCoins: 8,
+    totalAssets: 8,
+    assetsDisplay: '8000万',
+    level: 0,
+    safeBox: '9grid',
+    stamina: '7',
+    awmAmmo: 120,
+    trainingLevel: '7级',
+    rangeLevel: '7级',
+    knifeSkins: ['怜悯', '影锋'],
     operatorSkins: { '威龙': ['凌霄戍卫', '蛟龙行动'], '红狼': ['蚀金玫瑰'] },
     price: 1280,
     deposit: 800,
     note: '全皮肤，满级干员',
+    status: 'active',
+    createdAt: '2026-03-24',
+    updatedAt: '2026-03-24',
   },
   {
     id: 'SJZ309104',
-    date: '2026-03-23',
     region: '江苏省',
     server: 'QQ',
-    loginType: '账密',
+    loginType: 'account',
     rank: '铂金',
-    assets: '3000万',
-    safe: '2×3高级保险箱',
-    awm: '45发',
-    training: '5级',
-    range: '4级',
-    knife: '北极星',
-    knifeExtra: '',
+    harvardCoins: 3,
+    totalAssets: 3,
+    assetsDisplay: '3000万',
+    level: 0,
+    safeBox: '6grid',
+    stamina: '7',
+    awmAmmo: 45,
+    trainingLevel: '5级',
+    rangeLevel: '4级',
+    knifeSkins: ['北极星'],
     operatorSkins: { '蜂医': ['送葬人无题密令'], '威龙': ['铁面判官'] },
     price: 420,
     deposit: 300,
     note: '新手推荐，性价比高',
+    status: 'active',
+    createdAt: '2026-03-23',
+    updatedAt: '2026-03-23',
   },
   {
     id: 'SJZ310256',
-    date: '2026-03-22',
     region: '北京市',
     server: '微信',
-    loginType: '扫码',
+    loginType: 'qrcode',
     rank: '三角洲巅峰',
-    assets: '1.2亿',
-    safe: '3×3顶级安全箱',
-    awm: '200发',
-    training: '7级',
-    range: '7级',
-    knife: '电锯惊魂',
-    knifeExtra: '暗星、信条',
-    operatorSkins: { 
-      '红狼': ['蚀金玫瑰', '黑鹰坠落'], 
+    harvardCoins: 12,
+    totalAssets: 12,
+    assetsDisplay: '1.2亿',
+    level: 0,
+    safeBox: '9grid',
+    stamina: '7',
+    awmAmmo: 200,
+    trainingLevel: '7级',
+    rangeLevel: '7级',
+    knifeSkins: ['电锯惊魂', '暗星', '信条'],
+    operatorSkins: {
+      '红狼': ['蚀金玫瑰', '黑鹰坠落'],
       '威龙': ['凌霄戍卫', '蛟龙行动', '铁面判官', '壮志凌云', '吴彦祖'],
       '蜂医': ['送葬人无题密令', '黑鹰坠落', '危险物质'],
       '无名': ['夜鹰'],
       '露娜': ['黑-天际线'],
       '蛊': ['能天使-午夜邮差'],
-      '骇爪': ['维什戴尔', '水墨云图']
+      '骇爪': ['维什戴尔', '水墨云图'],
     },
     price: 2580,
     deposit: 1500,
     note: '顶级账号，全收集',
+    status: 'active',
+    createdAt: '2026-03-22',
+    updatedAt: '2026-03-22',
   },
   {
     id: 'SJZ311089',
-    date: '2026-03-21',
     region: '上海市',
     server: 'QQ',
-    loginType: '账密',
+    loginType: 'account',
     rank: '黄金',
-    assets: '1500万',
-    safe: '2×2进阶安全箱',
-    awm: '30发',
-    training: '4级',
-    range: '3级',
-    knife: '赤霄',
-    knifeExtra: '',
+    harvardCoins: 1.5,
+    totalAssets: 1.5,
+    assetsDisplay: '1500万',
+    level: 0,
+    safeBox: 'other',
+    stamina: '7',
+    awmAmmo: 30,
+    trainingLevel: '4级',
+    rangeLevel: '3级',
+    knifeSkins: ['赤霄'],
     operatorSkins: { '红狼': ['黑鹰坠落'], '无名': ['夜鹰'] },
     price: 280,
     deposit: 200,
     note: '入门级账号',
+    status: 'active',
+    createdAt: '2026-03-21',
+    updatedAt: '2026-03-21',
   },
   {
     id: 'SJZ312467',
-    date: '2026-03-20',
     region: '四川省',
     server: '微信',
-    loginType: '扫码',
+    loginType: 'qrcode',
     rank: '钻石',
-    assets: '6000万',
-    safe: '3×3顶级安全箱',
-    awm: '85发',
-    training: '6级',
-    range: '6级',
-    knife: '龙牙',
-    knifeExtra: '影锋',
+    harvardCoins: 6,
+    totalAssets: 6,
+    assetsDisplay: '6000万',
+    level: 0,
+    safeBox: '9grid',
+    stamina: '7',
+    awmAmmo: 85,
+    trainingLevel: '6级',
+    rangeLevel: '6级',
+    knifeSkins: ['龙牙', '影锋'],
     operatorSkins: { '牧羊人': ['街头之王', '黑鹰坠落'], '露娜': ['黑-天际线'], '蛊': ['能天使-午夜邮差'] },
     price: 890,
     deposit: 600,
     note: 'PVP专精账号',
+    status: 'active',
+    createdAt: '2026-03-20',
+    updatedAt: '2026-03-20',
   },
 ];
 
@@ -297,10 +310,11 @@ export default function RentPage() {
     let result = allAccounts;
     
     if (searchQuery) {
-      result = result.filter(account => 
+      result = result.filter(account =>
         account.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         account.rank.includes(searchQuery) ||
-        account.assets.includes(searchQuery)
+        account.assetsDisplay.includes(searchQuery) ||
+        account.harvardCoins.toString().includes(searchQuery)
       );
     }
     
@@ -309,49 +323,73 @@ export default function RentPage() {
     }
     
     if (filters.safe !== '全部') {
-      result = result.filter(account => account.safe === filters.safe);
+      result = result.filter(account => safeBoxToShortDisplay(account.safeBox) === filters.safe);
     }
-    
+
     if (filters.knife !== '全部') {
-      result = result.filter(account => 
-        account.knife === filters.knife || account.knifeExtra?.includes(filters.knife)
+      result = result.filter(account =>
+        account.knifeSkins.includes(filters.knife)
       );
     }
-    
+
     // 训练中心筛选
     if (filters.training !== '全部') {
-      result = result.filter(account => account.training === filters.training);
+      result = result.filter(account => account.trainingLevel === filters.training);
     }
-    
+
     // 靶场筛选
     if (filters.range !== '全部') {
-      result = result.filter(account => account.range === filters.range);
+      result = result.filter(account => account.rangeLevel === filters.range);
     }
-    
+
+    // 哈佛币筛选
+    if (filters.harvardCoin !== '全部') {
+      switch (filters.harvardCoin) {
+        case '0-50M':
+          result = result.filter(account => account.harvardCoins >= 0 && account.harvardCoins <= 50);
+          break;
+        case '50-100M':
+          result = result.filter(account => account.harvardCoins > 50 && account.harvardCoins <= 100);
+          break;
+        case '100-200M':
+          result = result.filter(account => account.harvardCoins > 100 && account.harvardCoins <= 200);
+          break;
+        case '200-300M':
+          result = result.filter(account => account.harvardCoins > 200 && account.harvardCoins <= 300);
+          break;
+        case '300-500M':
+          result = result.filter(account => account.harvardCoins > 300 && account.harvardCoins <= 500);
+          break;
+        case '500M以上':
+          result = result.filter(account => account.harvardCoins > 500);
+          break;
+      }
+    }
+
     // AWM子弹数量筛选
     if (filters.awmAmmo !== '全部') {
       switch (filters.awmAmmo) {
         case '0-20发':
           result = result.filter(account => {
-            const val = parseInt(account.awm) || 0;
+            const val = account.awmAmmo || 0;
             return val >= 0 && val <= 20;
           });
           break;
         case '21-50发':
           result = result.filter(account => {
-            const val = parseInt(account.awm) || 0;
+            const val = account.awmAmmo || 0;
             return val >= 21 && val <= 50;
           });
           break;
         case '51-100发':
           result = result.filter(account => {
-            const val = parseInt(account.awm) || 0;
+            const val = account.awmAmmo || 0;
             return val >= 51 && val <= 100;
           });
           break;
         case '100发以上':
           result = result.filter(account => {
-            const val = parseInt(account.awm) || 0;
+            const val = account.awmAmmo || 0;
             return val > 100;
           });
           break;
@@ -567,24 +605,26 @@ export default function RentPage() {
       
       <div className="grid grid-cols-2 gap-2 text-sm">
         <div className="text-gray-400">
-          <span className="text-gray-500">资产:</span> {account.assets}
+          <span className="text-gray-500">资产:</span> {account.assetsDisplay}
         </div>
         <div className="text-gray-400">
-          <span className="text-gray-500">安全箱:</span> {account.safe.replace('安全箱', '')}
+          <span className="text-gray-500">安全箱:</span> {safeBoxToShortDisplay(account.safeBox).replace('安全箱', '')}
         </div>
         <div className="text-gray-400">
-          <span className="text-gray-500">训练中心:</span> {account.training}
+          <span className="text-gray-500">训练中心:</span> {account.trainingLevel}
         </div>
         <div className="text-gray-400">
-          <span className="text-gray-500">靶场:</span> {account.range}
+          <span className="text-gray-500">靶场:</span> {account.rangeLevel}
         </div>
         <div className="text-gray-400">
-          <span className="text-gray-500">AWM子弹:</span> {account.awm}
+          <span className="text-gray-500">AWM子弹:</span> {account.awmAmmo}发
         </div>
       </div>
-      
+
       <div className="flex flex-wrap gap-1">
-        <span className="px-2 py-0.5 bg-primary/10 rounded text-xs text-primary">{account.knife}</span>
+        {account.knifeSkins.slice(0, 1).map(knife => (
+          <span key={knife} className="px-2 py-0.5 bg-primary/10 rounded text-xs text-primary">{knife}</span>
+        ))}
       </div>
       
       {Object.keys(account.operatorSkins).length > 0 && (
@@ -826,7 +866,7 @@ export default function RentPage() {
                   <tr key={account.id} className="hover:bg-white/5 transition-colors">
                     <td className="px-3 lg:px-4 py-3 lg:py-4">
                       <span className="text-primary font-mono text-xs lg:text-sm">{account.id}</span>
-                      <div className="text-gray-500 text-xs">{account.server}</div>
+                      <div className="text-gray-500 text-xs">{account.server === 'QQ' ? 'QQ' : '微信'}</div>
                     </td>
                     <td className="px-3 lg:px-4 py-3 lg:py-4">
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${
@@ -838,15 +878,15 @@ export default function RentPage() {
                         {account.rank}
                       </span>
                     </td>
-                    <td className="px-3 lg:px-4 py-3 lg:py-4 text-white text-xs lg:text-sm">{account.assets}</td>
-                    <td className="px-3 lg:px-4 py-3 lg:py-4 text-gray-400 text-xs lg:text-sm">{account.safe}</td>
+                    <td className="px-3 lg:px-4 py-3 lg:py-4 text-white text-xs lg:text-sm">{account.assetsDisplay}</td>
+                    <td className="px-3 lg:px-4 py-3 lg:py-4 text-gray-400 text-xs lg:text-sm">{safeBoxToShortDisplay(account.safeBox)}</td>
                     <td className="px-3 lg:px-4 py-3 lg:py-4">
-                      <p className="text-gray-400 text-xs lg:text-sm">训练{account.training}</p>
-                      <p className="text-gray-500 text-xs">靶场{account.range}</p>
+                      <p className="text-gray-400 text-xs lg:text-sm">训练{account.trainingLevel}</p>
+                      <p className="text-gray-500 text-xs">靶场{account.rangeLevel}</p>
                     </td>
-                    <td className="px-3 lg:px-4 py-3 lg:py-4 text-gray-400 text-xs lg:text-sm">{account.awm}</td>
+                    <td className="px-3 lg:px-4 py-3 lg:py-4 text-gray-400 text-xs lg:text-sm">{account.awmAmmo}发</td>
                     <td className="px-3 lg:px-4 py-3 lg:py-4">
-                      <span className="px-2 py-0.5 bg-primary/10 rounded text-xs text-primary">{account.knife}</span>
+                      <span className="px-2 py-0.5 bg-primary/10 rounded text-xs text-primary">{account.knifeSkins[0]}</span>
                     </td>
                     <td className="px-3 lg:px-4 py-3 lg:py-4">
                       <div className="space-y-1 max-w-[200px]">
@@ -907,14 +947,14 @@ export default function RentPage() {
       <MobileFilterModal />
       
       {/* 联系支付弹窗 */}
-      <RentContactModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <RentContactModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         accountInfo={selectedAccount ? {
           id: selectedAccount.id,
           name: selectedAccount.id,
           price: selectedAccount.price,
-          deposit: selectedAccount.deposit,
+          deposit: selectedAccount.deposit ?? 0,
         } : undefined}
       />
     </div>

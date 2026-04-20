@@ -32,6 +32,13 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
+import type { GameAccountSell as SellAccount, SafeBoxType, StaminaLevel, LoginTypeCode } from '@/types/account';
+import {
+  safeBoxToDisplay,
+  staminaToDisplay,
+  loginTypeToDisplay,
+  calculateRecyclePrice,
+} from '@/utils/account';
 
 // 选项数据（与主页出号页面一致）
 const regions = ['QQ区', '微信区'];
@@ -72,89 +79,63 @@ const operatorSkins: Record<string, string[]> = {
   '骇爪': ['维什戴尔', '水墨云图'],
 };
 
-// 基础比例表
-const baseRatios: Record<string, Record<string, number>> = {
-  '9grid': { '7': 39, '5-6': 40, '3-4': 41 },
-  '6grid': { '7': 41, '5-6': 42, '3-4': 43 },
-  'other': { '7': 44, '5-6': 44, '3-4': 44 },
-};
-
-interface SellAccount {
-  id: string;
-  userId: string;
-  userName: string;
-  region: string;
-  loginType: string;
-  totalAssets: number;
-  harvardCoins: number;
-  level: string;
-  rank: string;
-  safeBox: string;
-  stamina: string;
-  trainingLevel: string;
-  rangeLevel: string;
-  awmAmmo: number;
-  banRecord: string;
-  isOwnFace: string;
-  superGuarantee: boolean;
-  knifeSkins: string[];
-  operatorSkins: Record<string, string[]>;
-  recyclePrice: number;
-  note: string;
-  status: 'pending' | 'approved' | 'rejected' | 'completed';
-  submittedAt: string;
-}
-
+// Mock data using unified GameAccountSell type
 const mockSellAccounts: SellAccount[] = [
   {
     id: 'SELL001',
     userId: 'USER001',
     userName: '陈浩然',
     region: 'QQ区',
-    loginType: '账密登录',
+    server: 'QQ',
+    loginType: 'account',
     totalAssets: 300,
     harvardCoins: 237,
-    level: '60',
+    level: 60,
     rank: '钻石',
-    safeBox: '9格安全箱',
-    stamina: '7体',
+    safeBox: '9grid',
+    stamina: '7',
     trainingLevel: '7级',
     rangeLevel: '6级',
     awmAmmo: 70,
     banRecord: '无封禁记录',
-    isOwnFace: '是本人',
+    isOwnFace: true,
     superGuarantee: false,
     knifeSkins: [],
     operatorSkins: {},
-    recyclePrice: 608,
+    price: 608,
     note: '12格卡包，航天巴克...',
     status: 'pending',
-    submittedAt: '2026-03-25 14:30',
+    submittedAt: '2026-03-25',
+    createdAt: '2026-03-25',
+    updatedAt: '2026-03-25',
   },
   {
     id: 'SELL002',
     userId: 'USER002',
     userName: '李文博',
     region: '微信区',
-    loginType: '扫码登录',
+    server: '微信',
+    loginType: 'qrcode',
     totalAssets: 600,
     harvardCoins: 500,
-    level: '65',
+    level: 65,
     rank: '黑鹰',
-    safeBox: '9格安全箱',
-    stamina: '7体',
+    safeBox: '9grid',
+    stamina: '7',
     trainingLevel: '7级',
     rangeLevel: '7级',
     awmAmmo: 120,
     banRecord: '无封禁记录',
-    isOwnFace: '是本人',
+    isOwnFace: true,
     superGuarantee: true,
     knifeSkins: ['怜悯'],
     operatorSkins: { '威龙': ['凌霄戍卫'] },
-    recyclePrice: 1282,
+    price: 1282,
     note: '全皮肤，满级干员',
     status: 'approved',
     submittedAt: '2026-03-24 10:15',
+    createdAt: '2026-03-24',
+    updatedAt: '2026-03-24',
   },
 ];
 
@@ -424,7 +405,7 @@ export default function SellAccounts() {
                   </td>
                   <td className="px-3 py-3">
                     <p className="text-gray-400 text-xs">{account.region}</p>
-                    <p className="text-gray-500 text-xs">{account.loginType}</p>
+                    <p className="text-gray-500 text-xs">{loginTypeToDisplay(account.loginType)}</p>
                   </td>
                   <td className="px-3 py-3">
                     <p className="text-white text-xs">{account.totalAssets}M</p>
@@ -435,8 +416,8 @@ export default function SellAccounts() {
                     <p className="text-gray-500 text-xs">{account.rank}</p>
                   </td>
                   <td className="px-3 py-3">
-                    <p className="text-gray-400 text-xs">{account.safeBox}</p>
-                    <p className="text-gray-500 text-xs">{account.stamina}</p>
+                    <p className="text-gray-400 text-xs">{safeBoxToDisplay(account.safeBox)}</p>
+                    <p className="text-gray-500 text-xs">{staminaToDisplay(account.stamina)}</p>
                   </td>
                   <td className="px-3 py-3">
                     <p className="text-gray-400 text-xs">训练{account.trainingLevel}</p>
@@ -485,7 +466,7 @@ export default function SellAccounts() {
                     </span>
                   </td>
                   <td className="px-3 py-3">
-                    <p className="text-primary font-bold text-xs">¥{account.recyclePrice.toFixed(0)}</p>
+                    <p className="text-primary font-bold text-xs">¥{account.price.toFixed(0)}</p>
                   </td>
                   <td className="px-3 py-3">
                     <span className={`px-2 py-0.5 rounded-full text-xs ${statusMap[account.status].color}`}>
@@ -569,13 +550,13 @@ export default function SellAccounts() {
                 </h4>
                 <div className="grid grid-cols-2 gap-3">
                   <div><p className="text-gray-400 text-xs">区服</p><p className="text-white text-sm">{selectedAccount.region}</p></div>
-                  <div><p className="text-gray-400 text-xs">登录方式</p><p className="text-white text-sm">{selectedAccount.loginType}</p></div>
+                  <div><p className="text-gray-400 text-xs">登录方式</p><p className="text-white text-sm">{loginTypeToDisplay(selectedAccount.loginType)}</p></div>
                   <div><p className="text-gray-400 text-xs">仓库总资产</p><p className="text-white text-sm">{selectedAccount.totalAssets}M</p></div>
                   <div><p className="text-gray-400 text-xs">哈弗币</p><p className="text-white text-sm">{selectedAccount.harvardCoins}M</p></div>
                   <div><p className="text-gray-400 text-xs">等级</p><p className="text-white text-sm">{selectedAccount.level}级</p></div>
                   <div><p className="text-gray-400 text-xs">段位</p><p className="text-white text-sm">{selectedAccount.rank}</p></div>
-                  <div><p className="text-gray-400 text-xs">安全箱</p><p className="text-white text-sm">{selectedAccount.safeBox}</p></div>
-                  <div><p className="text-gray-400 text-xs">体力</p><p className="text-white text-sm">{selectedAccount.stamina}</p></div>
+                  <div><p className="text-gray-400 text-xs">安全箱</p><p className="text-white text-sm">{safeBoxToDisplay(selectedAccount.safeBox)}</p></div>
+                  <div><p className="text-gray-400 text-xs">体力</p><p className="text-white text-sm">{staminaToDisplay(selectedAccount.stamina)}</p></div>
                   <div><p className="text-gray-400 text-xs">训练中心</p><p className="text-white text-sm">{selectedAccount.trainingLevel}</p></div>
                   <div><p className="text-gray-400 text-xs">靶场</p><p className="text-white text-sm">{selectedAccount.rangeLevel}</p></div>
                   <div><p className="text-gray-400 text-xs">AWM子弹</p><p className="text-white text-sm">{selectedAccount.awmAmmo}发</p></div>
@@ -586,7 +567,7 @@ export default function SellAccounts() {
                 <h4 className="text-primary font-medium mb-3 text-sm">其他信息</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <div><p className="text-gray-400 text-xs">封禁记录</p><p className="text-white text-sm">{selectedAccount.banRecord}</p></div>
-                  <div><p className="text-gray-400 text-xs">人脸是否本人</p><p className="text-white text-sm">{selectedAccount.isOwnFace}</p></div>
+                  <div><p className="text-gray-400 text-xs">人脸是否本人</p><p className="text-white text-sm">{selectedAccount.isOwnFace ? '是' : '否'}</p></div>
                   <div><p className="text-gray-400 text-xs">超级质保</p><p className="text-white text-sm">{selectedAccount.superGuarantee ? '已开启' : '未开启'}</p></div>
                 </div>
               </div>
@@ -627,7 +608,7 @@ export default function SellAccounts() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-gray-400 text-xs">计算价格</p>
-                    <p className="text-3xl font-bold text-primary">¥{selectedAccount.recyclePrice.toFixed(2)}</p>
+                    <p className="text-3xl font-bold text-primary">¥{selectedAccount.price.toFixed(2)}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-gray-400 text-xs">状态</p>
@@ -680,16 +661,33 @@ export default function SellAccounts() {
 
 // 添加账号表单组件
 function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    userName: string;
+    region: string;
+    loginType: LoginTypeCode | '';
+    totalAssets: string;
+    harvardCoins: string;
+    level: string;
+    rank: string;
+    safeBox: SafeBoxType | '';
+    stamina: StaminaLevel | '';
+    trainingLevel: string;
+    rangeLevel: string;
+    awmAmmo: string;
+    banRecord: string;
+    isOwnFace: string;
+    superGuarantee: boolean;
+    note: string;
+  }>({
     userName: '',
     region: '',
-    loginType: '',
+    loginType: '' as LoginTypeCode | '',
     totalAssets: '',
     harvardCoins: '',
     level: '',
     rank: '',
-    safeBox: '',
-    stamina: '',
+    safeBox: '' as SafeBoxType | '',
+    stamina: '' as StaminaLevel | '',
     trainingLevel: '',
     rangeLevel: '',
     awmAmmo: '',
@@ -707,36 +705,18 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
   // 计算回收价格
   useEffect(() => {
     const harvardCoins = parseFloat(formData.harvardCoins);
-    const safeBox = formData.safeBox;
-    const stamina = formData.stamina;
-    
+    const safeBox = formData.safeBox as SafeBoxType;
+    const stamina = formData.stamina as StaminaLevel;
+
     if (harvardCoins && safeBox && stamina) {
-      const base = baseRatios[safeBox]?.[stamina] || 44;
-      
-      let skinDiscount = 0;
-      const hasWeilongRed = selectedOperatorSkins['威龙']?.some(s => 
-        ['凌霄戍卫', '蛟龙行动', '铁面判官', '壮志凌云', '吴彦祖'].includes(s)
+      const result = calculateRecyclePrice(
+        harvardCoins,
+        safeBox,
+        stamina,
+        selectedKnives,
+        selectedOperatorSkins
       );
-      const hasHonglangRed = selectedOperatorSkins['红狼']?.some(s => 
-        ['蚀金玫瑰'].includes(s)
-      );
-      const hasKnifeSkin = selectedKnives.length > 0 && !selectedKnives.includes('电锯惊魂');
-      
-      if (hasWeilongRed || hasHonglangRed) {
-        skinDiscount += 2;
-      }
-      if (hasKnifeSkin) {
-        skinDiscount += 1;
-      }
-      
-      let largeAmountAdjustment = 0;
-      if (harvardCoins >= 300) {
-        largeAmountAdjustment = 2;
-      }
-      
-      const final = base - skinDiscount + largeAmountAdjustment;
-      const price = (harvardCoins * 100) / final;
-      setRecyclePrice(price);
+      setRecyclePrice(result.recyclePrice);
     } else {
       setRecyclePrice(null);
     }
@@ -768,25 +748,28 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
       userId: 'USER' + Math.floor(Math.random() * 10000),
       userName: formData.userName || '用户' + Math.floor(Math.random() * 10000),
       region: formData.region,
-      loginType: formData.loginType === 'account' ? '账密登录' : '扫码登录',
+      server: formData.region === 'QQ区' ? 'QQ' : '微信',
+      loginType: formData.loginType as LoginTypeCode,
       totalAssets: parseFloat(formData.totalAssets) || 0,
       harvardCoins: parseFloat(formData.harvardCoins) || 0,
-      level: formData.level,
-      rank: formData.rank,
-      safeBox: formData.safeBox === '9grid' ? '9格安全箱' : formData.safeBox === '6grid' ? '6格安全箱' : '其它安全箱',
-      stamina: formData.stamina === '7' ? '7体' : formData.stamina === '5-6' ? '5-6体' : '3-4体',
+      level: parseInt(formData.level) || 0,
+      rank: (formData.rank as SellAccount['rank']) || '青铜',
+      safeBox: formData.safeBox as SafeBoxType,
+      stamina: formData.stamina as StaminaLevel,
       trainingLevel: formData.trainingLevel || '1级',
       rangeLevel: formData.rangeLevel || '1级',
       awmAmmo: parseInt(formData.awmAmmo) || 0,
-      banRecord: formData.banRecord,
-      isOwnFace: formData.isOwnFace,
+      banRecord: formData.banRecord || '无封禁记录',
+      isOwnFace: formData.isOwnFace === '是本人',
       superGuarantee: formData.superGuarantee,
       knifeSkins: selectedKnives,
       operatorSkins: selectedOperatorSkins,
-      recyclePrice: recyclePrice || 0,
+      price: recyclePrice || 0,
       note: formData.note,
       status: 'pending',
       submittedAt: new Date().toLocaleString('zh-CN'),
+      createdAt: new Date().toLocaleString('zh-CN'),
+      updatedAt: new Date().toLocaleString('zh-CN'),
     };
     
     try {
@@ -832,7 +815,7 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
       <div className="border-b border-white/10 pb-4">
         <h3 className="text-primary font-medium mb-3">登录方式</h3>
         <div className="space-y-2">
-          <Select value={formData.loginType} onValueChange={(v) => setFormData({ ...formData, loginType: v })} required>
+          <Select value={formData.loginType} onValueChange={(v) => setFormData({ ...formData, loginType: v as LoginTypeCode })} required>
             <SelectTrigger className="bg-white/5 border-white/10 text-white">
               <SelectValue placeholder="选择登录方式" />
             </SelectTrigger>
@@ -906,7 +889,7 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label className="text-sm text-gray-400">安全箱等级 <span className="text-red-500">*</span></Label>
-            <Select value={formData.safeBox} onValueChange={(v) => setFormData({ ...formData, safeBox: v })} required>
+            <Select value={formData.safeBox} onValueChange={(v) => setFormData({ ...formData, safeBox: v as SafeBoxType })} required>
               <SelectTrigger className="bg-white/5 border-white/10 text-white">
                 <SelectValue placeholder="选择安全箱" />
               </SelectTrigger>
@@ -917,7 +900,7 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
           </div>
           <div className="space-y-2">
             <Label className="text-sm text-gray-400">体力等级 <span className="text-red-500">*</span></Label>
-            <Select value={formData.stamina} onValueChange={(v) => setFormData({ ...formData, stamina: v })} required>
+            <Select value={formData.stamina} onValueChange={(v) => setFormData({ ...formData, stamina: v as StaminaLevel })} required>
               <SelectTrigger className="bg-white/5 border-white/10 text-white">
                 <SelectValue placeholder="选择体力等级" />
               </SelectTrigger>

@@ -26,6 +26,12 @@ import {
   ChevronUp,
   RefreshCw,
 } from 'lucide-react';
+import type { GameAccountRent, LoginTypeCode, SafeBoxType } from '@/types/account';
+import {
+  harvardCoinsToAssetsDisplay,
+  loginTypeToDisplay,
+  safeBoxToShortDisplay,
+} from '@/utils/account';
 
 // 筛选选项数据（与主页租号页面一致）
 const filterOptions = {
@@ -49,71 +55,55 @@ const operatorSkins: Record<string, string[]> = {
   '骇爪': ['维什戴尔', '水墨云图'],
 };
 
-// 账号数据类型（与前台 RentPage 一致）
-interface RentAccount {
-  id: string;
-  date: string;
-  region: string;
-  server: string;
-  loginType: string;
-  rank: string;
-  assets: string;
-  harvardCoins: string;
-  safe: string;
-  awm: string;
-  training: string;
-  range: string;
-  knife: string;
-  knifeExtra: string;
-  operatorSkins: Record<string, string[]>;
-  price: number;
-  deposit: number;
-  note: string;
-  status: 'active' | 'rented' | 'disabled';
-}
-
-const mockAccounts: RentAccount[] = [
+// 账号数据类型（使用统一的 GameAccountRent）
+const mockAccounts: GameAccountRent[] = [
   {
     id: 'SJZ307642',
-    date: '2026-03-25',
     region: '广东省',
     server: 'QQ',
-    loginType: '账密',
+    loginType: 'account',
     rank: '钻石',
-    assets: '5000万',
-    harvardCoins: '237M',
-    safe: '3×3顶级安全箱',
-    awm: '70发',
-    training: '7级',
-    range: '6级',
-    knife: '电锯惊魂',
-    knifeExtra: '暗星',
+    harvardCoins: 5,
+    totalAssets: 5,
+    assetsDisplay: '5000万',
+    level: 0,
+    safeBox: '9grid',
+    stamina: '7',
+    awmAmmo: 70,
+    trainingLevel: '7级',
+    rangeLevel: '6级',
+    knifeSkins: ['电锯惊魂', '暗星'],
     operatorSkins: { '露娜': ['黑-天际线'], '无名': ['夜鹰'] },
     price: 765,
     deposit: 559,
     note: '12格卡包，航天巴克...',
     status: 'active',
+    createdAt: '2026-03-25',
+    updatedAt: '2026-03-25',
   },
   {
     id: 'SJZ308521',
-    date: '2026-03-24',
     region: '浙江省',
     server: '微信',
-    loginType: '扫码',
+    loginType: 'qrcode',
     rank: '黑鹰',
-    assets: '8000万',
-    harvardCoins: '500M',
-    safe: '3×3顶级安全箱',
-    awm: '120发',
-    training: '7级',
-    range: '7级',
-    knife: '怜悯',
-    knifeExtra: '影锋',
+    harvardCoins: 8,
+    totalAssets: 8,
+    assetsDisplay: '8000万',
+    level: 0,
+    safeBox: '9grid',
+    stamina: '7',
+    awmAmmo: 120,
+    trainingLevel: '7级',
+    rangeLevel: '7级',
+    knifeSkins: ['怜悯', '影锋'],
     operatorSkins: {},
     price: 1280,
     deposit: 800,
     note: '全皮肤，满级干员',
     status: 'rented',
+    createdAt: '2026-03-24',
+    updatedAt: '2026-03-24',
   },
 ];
 
@@ -128,8 +118,8 @@ export default function RentAccounts() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState<RentAccount | null>(null);
-  const [accounts, setAccounts] = useState<RentAccount[]>([]);
+  const [selectedAccount, setSelectedAccount] = useState<GameAccountRent | null>(null);
+  const [accounts, setAccounts] = useState<GameAccountRent[]>([]);
 
   // 从 localStorage 加载数据
   const loadAccounts = () => {
@@ -156,7 +146,8 @@ export default function RentAccounts() {
     const matchesSearch =
       account.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       account.rank.includes(searchQuery) ||
-      account.harvardCoins.includes(searchQuery);
+      account.assetsDisplay.includes(searchQuery) ||
+      account.harvardCoins.toString().includes(searchQuery);
     const matchesStatus = statusFilter === 'all' || account.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -281,21 +272,21 @@ export default function RentAccounts() {
                   </td>
                   <td className="px-3 py-3">
                     <p className="text-white text-xs">{account.rank}</p>
-                    <p className="text-gray-500 text-xs">{account.harvardCoins}</p>
+                    <p className="text-gray-500 text-xs">{account.assetsDisplay}</p>
                   </td>
                   <td className="px-3 py-3">
-                    <span className="text-gray-400 text-xs">{account.safe}</span>
+                    <span className="text-gray-400 text-xs">{safeBoxToShortDisplay(account.safeBox)}</span>
                   </td>
                   <td className="px-3 py-3">
-                    <p className="text-gray-400 text-xs">训练{account.training}</p>
-                    <p className="text-gray-500 text-xs">靶场{account.range}</p>
+                    <p className="text-gray-400 text-xs">训练{account.trainingLevel}</p>
+                    <p className="text-gray-500 text-xs">靶场{account.rangeLevel}</p>
                   </td>
                   <td className="px-3 py-3">
-                    <span className="text-gray-400 text-xs">{account.awm}</span>
+                    <span className="text-gray-400 text-xs">{account.awmAmmo}发</span>
                   </td>
                   <td className="px-3 py-3">
-                    <span className="text-primary text-xs">{account.knife}</span>
-                    {account.knifeExtra && <p className="text-gray-500 text-xs">{account.knifeExtra}</p>}
+                    <span className="text-primary text-xs">{account.knifeSkins[0]}</span>
+                    {account.knifeSkins.length > 1 && <p className="text-gray-500 text-xs">{account.knifeSkins.slice(1).join('、')}</p>}
                   </td>
                   <td className="px-3 py-3">
                     {Object.keys(account.operatorSkins).length > 0 ? (
@@ -368,11 +359,11 @@ export default function RentAccounts() {
                 <h4 className="text-primary font-medium mb-3 text-sm">基本信息</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <div><p className="text-gray-400 text-xs">段位</p><p className="text-white text-sm">{selectedAccount.rank}</p></div>
-                  <div><p className="text-gray-400 text-xs">哈弗币</p><p className="text-white text-sm">{selectedAccount.harvardCoins}</p></div>
-                  <div><p className="text-gray-400 text-xs">安全箱</p><p className="text-white text-sm">{selectedAccount.safe}</p></div>
-                  <div><p className="text-gray-400 text-xs">训练中心</p><p className="text-white text-sm">{selectedAccount.training}</p></div>
-                  <div><p className="text-gray-400 text-xs">靶场</p><p className="text-white text-sm">{selectedAccount.range}</p></div>
-                  <div><p className="text-gray-400 text-xs">AWM子弹</p><p className="text-white text-sm">{selectedAccount.awm}</p></div>
+                  <div><p className="text-gray-400 text-xs">哈佛币</p><p className="text-white text-sm">{selectedAccount.harvardCoins}M</p></div>
+                  <div><p className="text-gray-400 text-xs">安全箱</p><p className="text-white text-sm">{safeBoxToShortDisplay(selectedAccount.safeBox)}</p></div>
+                  <div><p className="text-gray-400 text-xs">训练中心</p><p className="text-white text-sm">{selectedAccount.trainingLevel}</p></div>
+                  <div><p className="text-gray-400 text-xs">靶场</p><p className="text-white text-sm">{selectedAccount.rangeLevel}</p></div>
+                  <div><p className="text-gray-400 text-xs">AWM子弹</p><p className="text-white text-sm">{selectedAccount.awmAmmo}发</p></div>
                 </div>
               </div>
 
@@ -381,15 +372,14 @@ export default function RentAccounts() {
                 <div className="grid grid-cols-2 gap-3">
                   <div><p className="text-gray-400 text-xs">地区</p><p className="text-white text-sm">{selectedAccount.region}</p></div>
                   <div><p className="text-gray-400 text-xs">服务器</p><p className="text-white text-sm">{selectedAccount.server}</p></div>
-                  <div><p className="text-gray-400 text-xs">登录方式</p><p className="text-white text-sm">{selectedAccount.loginType}</p></div>
+                  <div><p className="text-gray-400 text-xs">登录方式</p><p className="text-white text-sm">{loginTypeToDisplay(selectedAccount.loginType)}</p></div>
                 </div>
               </div>
 
-              {selectedAccount.knife && (
+              {selectedAccount.knifeSkins.length > 0 && (
                 <div className="bg-white/5 rounded-lg p-4">
                   <h4 className="text-primary font-medium mb-2 text-sm">刀皮</h4>
-                  <p className="text-white text-sm">{selectedAccount.knife}</p>
-                  {selectedAccount.knifeExtra && <p className="text-gray-400 text-xs">额外: {selectedAccount.knifeExtra}</p>}
+                  <p className="text-white text-sm">{selectedAccount.knifeSkins.join('、')}</p>
                 </div>
               )}
 
@@ -440,24 +430,22 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
     deposit: '',
     rank: '',
     harvardCoins: '',
-    safeBox: '',
+    safeBox: '' as SafeBoxType | '',
     trainingLevel: '',
     rangeLevel: '',
     awmAmmo: '',
-    knife: '',
-    knifeExtra: '',
     region: '',
     server: '',
-    loginType: '',
+    loginType: '' as LoginTypeCode | '',
   });
-  
+
   const [selectedKnives, setSelectedKnives] = useState<string[]>([]);
   const [selectedOperatorSkins, setSelectedOperatorSkins] = useState<Record<string, string[]>>({});
   const [expandedOperators, setExpandedOperators] = useState<Record<string, boolean>>({});
 
   const toggleKnife = (knife: string) => {
-    setSelectedKnives(prev => 
-      prev.includes(knife) 
+    setSelectedKnives(prev =>
+      prev.includes(knife)
         ? prev.filter(k => k !== knife)
         : [...prev, knife]
     );
@@ -475,28 +463,33 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // 构造提交数据（与前台 Account 接口一致）
-    const submitData: RentAccount = {
+
+    const harvardCoins = parseFloat(formData.harvardCoins);
+
+    // 构造提交数据（使用统一的 GameAccountRent）
+    const submitData: GameAccountRent = {
       id: 'SJZ' + Date.now().toString().slice(-6),
-      date: new Date().toISOString().split('T')[0],
       region: formData.region,
       server: formData.server,
-      loginType: formData.loginType,
-      rank: formData.rank,
-      assets: (parseFloat(formData.harvardCoins) * 1000000 / 10000).toFixed(0) + '万',
-      harvardCoins: formData.harvardCoins + 'M',
-      safe: formData.safeBox,
-      awm: formData.awmAmmo + '发',
-      training: formData.trainingLevel,
-      range: formData.rangeLevel,
-      knife: selectedKnives[0] || '',
-      knifeExtra: selectedKnives.slice(1).join('、'),
+      loginType: formData.loginType as LoginTypeCode,
+      rank: (formData.rank as GameAccountRent['rank']) || '青铜',
+      harvardCoins,
+      totalAssets: harvardCoins,
+      assetsDisplay: harvardCoinsToAssetsDisplay(harvardCoins),
+      level: 0,
+      safeBox: formData.safeBox as SafeBoxType,
+      stamina: '7',
+      awmAmmo: parseInt(formData.awmAmmo) || 0,
+      trainingLevel: formData.trainingLevel || '1级',
+      rangeLevel: formData.rangeLevel || '1级',
+      knifeSkins: selectedKnives,
       operatorSkins: selectedOperatorSkins,
       price: parseFloat(formData.price) || 0,
       deposit: parseFloat(formData.deposit) || 0,
       note: '',
       status: 'active',
+      createdAt: new Date().toISOString().split('T')[0],
+      updatedAt: new Date().toISOString().split('T')[0],
     };
     
     // 保存到 localStorage
@@ -591,7 +584,7 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
           </div>
           <div className="space-y-2">
             <Label className="text-sm text-gray-400">安全箱 <span className="text-red-500">*</span></Label>
-            <Select value={formData.safeBox} onValueChange={(v) => setFormData({ ...formData, safeBox: v })} required>
+            <Select value={formData.safeBox} onValueChange={(v) => setFormData({ ...formData, safeBox: v as SafeBoxType })} required>
               <SelectTrigger className="bg-white/5 border-white/10 text-white">
                 <SelectValue placeholder="选择安全箱" />
               </SelectTrigger>
@@ -754,13 +747,13 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
       <div className="border-b border-white/10 pb-4">
         <h3 className="text-primary font-medium mb-3">登录方式</h3>
         <div className="space-y-2">
-          <Select value={formData.loginType} onValueChange={(v) => setFormData({ ...formData, loginType: v })} required>
+          <Select value={formData.loginType} onValueChange={(v) => setFormData({ ...formData, loginType: v as LoginTypeCode })} required>
             <SelectTrigger className="bg-white/5 border-white/10 text-white">
               <SelectValue placeholder="选择登录方式" />
             </SelectTrigger>
             <SelectContent className="bg-gray-900 border-white/10">
-              <SelectItem value="账密">账密登录</SelectItem>
-              <SelectItem value="扫码">扫码登录</SelectItem>
+              <SelectItem value="account">账密登录</SelectItem>
+              <SelectItem value="qrcode">扫码登录</SelectItem>
             </SelectContent>
           </Select>
         </div>
