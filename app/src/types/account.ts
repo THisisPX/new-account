@@ -75,7 +75,9 @@ export interface GameAccountBase {
   stamina: StaminaLevel;
   trainingLevel: string;  // '1级' - '7级'
   rangeLevel: string;     // '1级' - '7级'
-  awmAmmo: number;
+  awmAmmo: number;       // AWM子弹数量
+  sixSetHead: number;      // 六头数量
+  sixSetArmor: number;    // 六甲数量
   knifeSkins: string[];   // Array of knife skin names
   operatorSkins: Record<string, string[]>;
   price: number;
@@ -121,6 +123,8 @@ export interface RentFormData {
   trainingLevel: string;
   rangeLevel: string;
   awmAmmo: string;
+  sixSetHead: string;
+  sixSetArmor: string;
   knife: string;           // Primary knife
   knifeExtra: string;     // Extra knives (comma-separated for display)
   price: string;
@@ -140,6 +144,8 @@ export interface SellFormData {
   trainingLevel: string;
   rangeLevel: string;
   awmAmmo: string;
+  sixSetHead: string;
+  sixSetArmor: string;
   banRecord: string;
   isOwnFace: string;
   superGuarantee: boolean;

@@ -279,6 +279,9 @@ export default function RentAccounts() {
                     <span className="text-gray-400 text-xs">{account.awmAmmo}发</span>
                   </td>
                   <td className="px-3 py-3">
+                    <span className="text-gray-400 text-xs">{(account as any).sixSetHead || 0}/{(account as any).sixSetArmor || 0}</span>
+                  </td>
+                  <td className="px-3 py-3">
                     <span className="text-primary text-xs">{account.knifeSkins[0]}</span>
                     {account.knifeSkins.length > 1 && <p className="text-gray-500 text-xs">{account.knifeSkins.slice(1).join('、')}</p>}
                   </td>
@@ -358,6 +361,8 @@ export default function RentAccounts() {
                   <div><p className="text-gray-400 text-xs">训练中心</p><p className="text-white text-sm">{selectedAccount.trainingLevel}</p></div>
                   <div><p className="text-gray-400 text-xs">靶场</p><p className="text-white text-sm">{selectedAccount.rangeLevel}</p></div>
                   <div><p className="text-gray-400 text-xs">AWM子弹</p><p className="text-white text-sm">{selectedAccount.awmAmmo}发</p></div>
+                  <div><p className="text-gray-400 text-xs">六头</p><p className="text-white text-sm">{(selectedAccount as any).sixSetHead || 0}个</p></div>
+                  <div><p className="text-gray-400 text-xs">六甲</p><p className="text-white text-sm">{(selectedAccount as any).sixSetArmor || 0}个</p></div>
                 </div>
               </div>
 
@@ -428,6 +433,8 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
     trainingLevel: '',
     rangeLevel: '',
     awmAmmo: '',
+    sixSetHead: '',
+    sixSetArmor: '',
     region: '',
     server: '',
     loginType: '' as LoginTypeCode | '',
@@ -474,6 +481,8 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
       safeBox: formData.safeBox as SafeBoxType,
       stamina: '7',
       awmAmmo: parseInt(formData.awmAmmo) || 0,
+      sixSetHead: parseInt(formData.sixSetHead) || 0,
+      sixSetArmor: parseInt(formData.sixSetArmor) || 0,
       trainingLevel: formData.trainingLevel || '1级',
       rangeLevel: formData.rangeLevel || '1级',
       knifeSkins: selectedKnives,
@@ -626,18 +635,40 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
       {/* AWM子弹 */}
       <div className="border-b border-white/10 pb-4">
         <h3 className="text-primary font-medium mb-3">AWM子弹</h3>
-        <div className="space-y-2">
-          <Label className="text-sm text-gray-400">AWM子弹数量 <span className="text-red-500">*</span></Label>
-          <div className="relative">
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label className="text-sm text-gray-400">AWM子弹 <span className="text-red-500">*</span></Label>
+            <div className="relative">
+              <Input
+                type="number"
+                placeholder="如：70"
+                value={formData.awmAmmo}
+                onChange={(e) => setFormData({ ...formData, awmAmmo: e.target.value })}
+                className="bg-white/5 border-white/10 text-white pr-12"
+                required
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">发</span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-sm text-gray-400">六头数量</Label>
             <Input
               type="number"
-              placeholder="如：70"
-              value={formData.awmAmmo}
-              onChange={(e) => setFormData({ ...formData, awmAmmo: e.target.value })}
-              className="bg-white/5 border-white/10 text-white pr-12"
-              required
+              placeholder="如：2"
+              value={formData.sixSetHead}
+              onChange={(e) => setFormData({ ...formData, sixSetHead: e.target.value })}
+              className="bg-white/5 border-white/10 text-white"
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">发</span>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-sm text-gray-400">六甲数量</Label>
+            <Input
+              type="number"
+              placeholder="如：2"
+              value={formData.sixSetArmor}
+              onChange={(e) => setFormData({ ...formData, sixSetArmor: e.target.value })}
+              className="bg-white/5 border-white/10 text-white"
+            />
           </div>
         </div>
       </div>

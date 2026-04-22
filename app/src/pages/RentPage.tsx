@@ -622,6 +622,12 @@ export default function RentPage() {
         <div className="text-gray-400">
           <span className="text-gray-500">AWM子弹:</span> {account.awmAmmo}发
         </div>
+        <div className="text-gray-400">
+          <span className="text-gray-500">六头:</span> {(account as any).sixSetHead || 0}个
+        </div>
+        <div className="text-gray-400">
+          <span className="text-gray-500">六甲:</span> {(account as any).sixSetArmor || 0}个
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-1">
@@ -858,6 +864,7 @@ export default function RentPage() {
                   <th className="px-3 lg:px-4 py-3 lg:py-4 text-left text-xs lg:text-sm font-medium text-gray-400">安全箱</th>
                   <th className="px-3 lg:px-4 py-3 lg:py-4 text-left text-xs lg:text-sm font-medium text-gray-400">训练/靶场</th>
                   <th className="px-3 lg:px-4 py-3 lg:py-4 text-left text-xs lg:text-sm font-medium text-gray-400">AWM</th>
+                  <th className="px-3 lg:px-4 py-3 lg:py-4 text-left text-xs lg:text-sm font-medium text-gray-400">六头/六甲</th>
                   <th className="px-3 lg:px-4 py-3 lg:py-4 text-left text-xs lg:text-sm font-medium text-gray-400">刀皮</th>
                   <th className="px-3 lg:px-4 py-3 lg:py-4 text-left text-xs lg:text-sm font-medium text-gray-400">干员皮肤</th>
                   <th className="px-3 lg:px-4 py-3 lg:py-4 text-left text-xs lg:text-sm font-medium text-gray-400">价格</th>
@@ -888,6 +895,7 @@ export default function RentPage() {
                       <p className="text-gray-500 text-xs">靶场{account.rangeLevel}</p>
                     </td>
                     <td className="px-3 lg:px-4 py-3 lg:py-4 text-gray-400 text-xs lg:text-sm">{account.awmAmmo}发</td>
+                    <td className="px-3 lg:px-4 py-3 lg:py-4 text-gray-400 text-xs lg:text-sm">{(account as any).sixSetHead || 0}/{(account as any).sixSetArmor || 0}</td>
                     <td className="px-3 lg:px-4 py-3 lg:py-4">
                       <span className="px-2 py-0.5 bg-primary/10 rounded text-xs text-primary">{account.knifeSkins[0]}</span>
                     </td>

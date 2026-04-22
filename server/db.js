@@ -192,6 +192,8 @@ async function initDb() {
       trainingLevel TEXT,
       rangeLevel TEXT,
       awmAmmo INTEGER DEFAULT 0,
+      sixSetHead INTEGER DEFAULT 0,
+      sixSetArmor INTEGER DEFAULT 0,
       banRecord TEXT DEFAULT '无封禁记录',
       isOwnFace INTEGER DEFAULT 0,
       superGuarantee INTEGER DEFAULT 0,
@@ -208,6 +210,18 @@ async function initDb() {
       other TEXT
     )
   `);
+
+  // Add new columns to existing database if they don't exist
+  try {
+    _db.run('ALTER TABLE sell_accounts ADD COLUMN sixSetHead INTEGER DEFAULT 0');
+  } catch (e) {
+    // Column already exists, ignore
+  }
+  try {
+    _db.run('ALTER TABLE sell_accounts ADD COLUMN sixSetArmor INTEGER DEFAULT 0');
+  } catch (e) {
+    // Column already exists, ignore
+  }
 
   _db.run(`
     CREATE TABLE IF NOT EXISTS admin (

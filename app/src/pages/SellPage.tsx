@@ -45,8 +45,8 @@ const safeBoxes = [
   { value: '6grid', label: '6格安全箱 (2×3)', desc: '中级安全箱' },
   { value: 'other', label: '其它安全箱', desc: '低级或无安全箱' },
 ];
-const trainingLevels = ['1级', '2级', '3级', '4级', '5级', '6级', '7级'];
-const rangeLevels = ['1级', '2级', '3级', '4级', '5级', '6级', '7级'];
+const trainingLevels = ['4级', '5级', '6级', '7级'];
+const rangeLevels = ['4级', '5级', '6级', '7级'];
 const banRecords = ['无封禁记录', '有封禁记录（已解封）', '有封禁记录（未解封）'];
 const faceOptions = ['是本人', '不是本人'];
 
@@ -81,6 +81,8 @@ export default function SellPage() {
     trainingLevel: string;
     rangeLevel: string;
     awmAmmo: string;
+    sixSetHead: string;
+    sixSetArmor: string;
     banRecord: string;
     isOwnFace: string;
     superGuarantee: boolean;
@@ -96,6 +98,8 @@ export default function SellPage() {
     trainingLevel: '',
     rangeLevel: '',
     awmAmmo: '',
+    sixSetHead: '',
+    sixSetArmor: '',
     banRecord: '',
     isOwnFace: '',
     superGuarantee: false,
@@ -160,12 +164,19 @@ export default function SellPage() {
     }
 
     if (harvardCoins && safeBox && formData.trainingLevel) {
+      const awmAmmo = parseInt(formData.awmAmmo) || 0;
+      const sixSetHead = parseInt(formData.sixSetHead) || 0;
+      const sixSetArmor = parseInt(formData.sixSetArmor) || 0;
       const result = calculateRecyclePrice(
         harvardCoins,
         safeBox,
         stamina,
         selectedKnives,
-        selectedOperatorSkins
+        selectedOperatorSkins,
+        awmAmmo,
+        sixSetHead,
+        sixSetArmor,
+        formData.rangeLevel
       );
       setBaseRatio(result.baseRatio);
       setFinalRatio(result.finalRatio);
@@ -177,7 +188,7 @@ export default function SellPage() {
       setRecyclePrice(null);
       setPriceDetails([]);
     }
-  }, [formData.harvardCoins, formData.safeBox, formData.trainingLevel, selectedKnives, selectedOperatorSkins]);
+  }, [formData.harvardCoins, formData.safeBox, formData.trainingLevel, formData.rangeLevel, formData.awmAmmo, formData.sixSetHead, formData.sixSetArmor, selectedKnives, selectedOperatorSkins]);
 
   // 处理表单变化
   const handleChange = (field: keyof typeof formData, value: string | boolean) => {
@@ -250,6 +261,8 @@ export default function SellPage() {
       trainingLevel: formData.trainingLevel || '1级',
       rangeLevel: formData.rangeLevel || '1级',
       awmAmmo: toNumber(formData.awmAmmo),
+      sixSetHead: toNumber(formData.sixSetHead),
+      sixSetArmor: toNumber(formData.sixSetArmor),
       level: toNumber(formData.level),
       price: recyclePrice || 0,
       status: 'pending',
@@ -494,7 +507,7 @@ export default function SellPage() {
 
             {/* 训练中心等级 */}
             <div>
-              <Label className="text-gray-300 mb-2 block">训练中心等级 <span className="text-xs text-red-500">(3级起收)</span></Label>
+              <Label className="text-gray-300 mb-2 block">训练中心等级 <span className="text-xs text-red-500">(4级起收)</span></Label>
               <Select value={formData.trainingLevel} onValueChange={(v) => handleChange('trainingLevel', v)}>
                 <SelectTrigger className="bg-white/5 border-white/10 text-white">
                   <SelectValue placeholder="请选择" />
@@ -507,7 +520,7 @@ export default function SellPage() {
 
             {/* 靶场等级 */}
             <div>
-              <Label className="text-gray-300 mb-2 block">靶场等级 <span className="text-xs text-red-500">(3级起收)</span></Label>
+              <Label className="text-gray-300 mb-2 block">靶场等级 <span className="text-xs text-red-500">(4级起收)</span></Label>
               <Select value={formData.rangeLevel} onValueChange={(v) => handleChange('rangeLevel', v)}>
                 <SelectTrigger className="bg-white/5 border-white/10 text-white">
                   <SelectValue placeholder="请选择" />
@@ -529,7 +542,37 @@ export default function SellPage() {
                 className="bg-white/5 border-white/10 text-white"
               />
               <p className="text-xs text-gray-500 mt-2">
-                参考价：AWM子弹按照 0.8-1r 一发计算
+                每发价值25万哈佛币 (0.25M)
+              </p>
+            </div>
+
+            {/* 六头数量 */}
+            <div>
+              <Label className="text-gray-300 mb-2 block">六头数量</Label>
+              <Input
+                inputMode="numeric"
+                placeholder="如：2"
+                value={formData.sixSetHead}
+                onChange={(e) => handleChange('sixSetHead', e.target.value)}
+                className="bg-white/5 border-white/10 text-white"
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                每个价值60万哈佛币 (0.6M)
+              </p>
+            </div>
+
+            {/* 六甲数量 */}
+            <div>
+              <Label className="text-gray-300 mb-2 block">六甲数量</Label>
+              <Input
+                inputMode="numeric"
+                placeholder="如：2"
+                value={formData.sixSetArmor}
+                onChange={(e) => handleChange('sixSetArmor', e.target.value)}
+                className="bg-white/5 border-white/10 text-white"
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                每个价值80万哈佛币 (0.8M)
               </p>
             </div>
 

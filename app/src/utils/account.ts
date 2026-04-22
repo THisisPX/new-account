@@ -169,15 +169,41 @@ export function calculateRecyclePrice(
   safeBox: SafeBoxType,
   stamina: StaminaLevel,
   knifeSkins: string[],
-  operatorSkins: Record<string, string[]>
+  operatorSkins: Record<string, string[]>,
+  awmAmmo: number = 0,
+  sixSetHead: number = 0,
+  sixSetArmor: number = 0,
+  rangeLevel: string = '1级'
 ): RecyclePriceResult {
+  // Calculate additional value from AWM ammo, 六头, 六甲
+  // 1 AWM bullet = 25万 = 0.25M
+  // 1 六头 = 60万 = 0.6M
+  // 1 六甲 = 80万 = 0.8M
+  const awmValue = awmAmmo * 0.25;
+  const sixHeadValue = sixSetHead * 0.6;
+  const sixArmorValue = sixSetArmor * 0.8;
+
+  const totalHarvardCoins = harvardCoins + awmValue + sixHeadValue + sixArmorValue;
+
+  const details: string[] = [];
+
+  // Add breakdown of additional values
+  if (awmValue > 0) {
+    details.push(`AWM子弹: ${awmAmmo}发 × 0.25M = ${awmValue.toFixed(2)}M`);
+  }
+  if (sixHeadValue > 0) {
+    details.push(`六头: ${sixSetHead}个 × 0.6M = ${sixHeadValue.toFixed(2)}M`);
+  }
+  if (sixArmorValue > 0) {
+    details.push(`六甲: ${sixSetArmor}个 × 0.8M = ${sixArmorValue.toFixed(2)}M`);
+  }
+
   const baseRatios: Record<SafeBoxType, Record<StaminaLevel, number>> = {
     '9grid': { '7': 39, '5-6': 40, '3-4': 41 },
     '6grid': { '7': 41, '5-6': 42, '3-4': 43 },
     'other': { '7': 44, '5-6': 44, '3-4': 44 },
   };
 
-  const details: string[] = [];
   const base = baseRatios[safeBox]?.[stamina] || 44;
 
   let skinDiscount = 0;
@@ -202,16 +228,25 @@ export function calculateRecyclePrice(
   }
 
   let largeAmountAdjustment = 0;
-  if (harvardCoins >= 300) {
+  if (totalHarvardCoins >= 300) {
     largeAmountAdjustment = 2;
     details.push('大额账号(≥300M): +2');
   }
 
-  const finalRatio = base - skinDiscount + largeAmountAdjustment;
-  const recyclePrice = (harvardCoins * 100) / finalRatio;
+  // 靶场等级 <= 5级时，比例减1
+  let rangeLevelAdjustment = 0;
+  const rangeLevelNum = parseInt(rangeLevel.replace('级', ''));
+  if (rangeLevelNum <= 5) {
+    rangeLevelAdjustment = -1;
+    details.push(`靶场等级≤5级: -1`);
+  }
+
+  const finalRatio = base - skinDiscount + largeAmountAdjustment + rangeLevelAdjustment;
+  const recyclePrice = (totalHarvardCoins * 100) / finalRatio;
 
   details.push(`基础比例: 1:${base}`);
   details.push(`最终比例: 1:${finalRatio}`);
+  details.push(`总哈夫币: ${totalHarvardCoins.toFixed(2)}M`);
 
   return {
     baseRatio: base,

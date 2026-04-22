@@ -98,6 +98,8 @@ const mockSellAccounts: SellAccount[] = [
     trainingLevel: '7级',
     rangeLevel: '6级',
     awmAmmo: 70,
+    sixSetHead: 2,
+    sixSetArmor: 1,
     banRecord: '无封禁记录',
     isOwnFace: true,
     superGuarantee: false,
@@ -126,6 +128,8 @@ const mockSellAccounts: SellAccount[] = [
     trainingLevel: '7级',
     rangeLevel: '7级',
     awmAmmo: 120,
+    sixSetHead: 3,
+    sixSetArmor: 2,
     banRecord: '无封禁记录',
     isOwnFace: true,
     superGuarantee: true,
@@ -567,6 +571,8 @@ const loadAccounts = async () => {
                   <div><p className="text-gray-400 text-xs">训练中心</p><p className="text-white text-sm">{selectedAccount.trainingLevel}</p></div>
                   <div><p className="text-gray-400 text-xs">靶场</p><p className="text-white text-sm">{selectedAccount.rangeLevel}</p></div>
                   <div><p className="text-gray-400 text-xs">AWM子弹</p><p className="text-white text-sm">{selectedAccount.awmAmmo}发</p></div>
+                  <div><p className="text-gray-400 text-xs">六头</p><p className="text-white text-sm">{selectedAccount.sixSetHead || 0}个</p></div>
+                  <div><p className="text-gray-400 text-xs">六甲</p><p className="text-white text-sm">{selectedAccount.sixSetArmor || 0}个</p></div>
                 </div>
               </div>
 
@@ -741,6 +747,8 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
     trainingLevel: string;
     rangeLevel: string;
     awmAmmo: string;
+    sixSetHead: string;
+    sixSetArmor: string;
     banRecord: string;
     isOwnFace: string;
     superGuarantee: boolean;
@@ -758,6 +766,8 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
     trainingLevel: '',
     rangeLevel: '',
     awmAmmo: '',
+    sixSetHead: '',
+    sixSetArmor: '',
     banRecord: '',
     isOwnFace: '',
     superGuarantee: false,
@@ -774,6 +784,9 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
     const harvardCoins = parseFloat(formData.harvardCoins);
     const safeBox = formData.safeBox as SafeBoxType;
     const stamina = formData.stamina as StaminaLevel;
+    const awmAmmo = parseInt(formData.awmAmmo) || 0;
+    const sixSetHead = parseInt(formData.sixSetHead) || 0;
+    const sixSetArmor = parseInt(formData.sixSetArmor) || 0;
 
     if (harvardCoins && safeBox && stamina) {
       const result = calculateRecyclePrice(
@@ -781,13 +794,17 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
         safeBox,
         stamina,
         selectedKnives,
-        selectedOperatorSkins
+        selectedOperatorSkins,
+        awmAmmo,
+        sixSetHead,
+        sixSetArmor,
+        formData.rangeLevel
       );
       setRecyclePrice(result.recyclePrice);
     } else {
       setRecyclePrice(null);
     }
-  }, [formData.harvardCoins, formData.safeBox, formData.stamina, selectedKnives, selectedOperatorSkins]);
+  }, [formData.harvardCoins, formData.safeBox, formData.stamina, formData.rangeLevel, formData.awmAmmo, formData.sixSetHead, formData.sixSetArmor, selectedKnives, selectedOperatorSkins]);
 
   const toggleKnife = (knife: string) => {
     setSelectedKnives(prev => 
@@ -826,6 +843,8 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
       trainingLevel: formData.trainingLevel || '1级',
       rangeLevel: formData.rangeLevel || '1级',
       awmAmmo: parseInt(formData.awmAmmo) || 0,
+      sixSetHead: parseInt(formData.sixSetHead) || 0,
+      sixSetArmor: parseInt(formData.sixSetArmor) || 0,
       banRecord: formData.banRecord || '无封禁记录',
       isOwnFace: formData.isOwnFace === '是本人',
       superGuarantee: formData.superGuarantee,
@@ -1009,17 +1028,39 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
       {/* AWM子弹 */}
       <div className="border-b border-white/10 pb-4">
         <h3 className="text-primary font-medium mb-3">AWM子弹</h3>
-        <div className="space-y-2">
-          <Label className="text-sm text-gray-400">AWM子弹数量</Label>
-          <div className="relative">
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label className="text-sm text-gray-400">AWM子弹</Label>
+            <div className="relative">
+              <Input
+                type="number"
+                placeholder="如：70"
+                value={formData.awmAmmo}
+                onChange={(e) => setFormData({ ...formData, awmAmmo: e.target.value })}
+                className="bg-white/5 border-white/10 text-white pr-12"
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">发</span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-sm text-gray-400">六头数量</Label>
             <Input
               type="number"
-              placeholder="如：70"
-              value={formData.awmAmmo}
-              onChange={(e) => setFormData({ ...formData, awmAmmo: e.target.value })}
-              className="bg-white/5 border-white/10 text-white pr-12"
+              placeholder="如：2"
+              value={formData.sixSetHead}
+              onChange={(e) => setFormData({ ...formData, sixSetHead: e.target.value })}
+              className="bg-white/5 border-white/10 text-white"
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">发</span>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-sm text-gray-400">六甲数量</Label>
+            <Input
+              type="number"
+              placeholder="如：2"
+              value={formData.sixSetArmor}
+              onChange={(e) => setFormData({ ...formData, sixSetArmor: e.target.value })}
+              className="bg-white/5 border-white/10 text-white"
+            />
           </div>
         </div>
       </div>
