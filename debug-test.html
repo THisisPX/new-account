@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head><title>Debug Test</title></head>
+<body>
+<h1>API Debug Test</h1>
+<div id="log" style="background:#000;color:#0f0;padding:10px;font-family:monospace;white-space:pre-wrap;height:400px;overflow:auto;"></div>
+<br>
+<button onclick="runTests()">Run All Tests</button>
+
+<script>
+const log = document.getElementById('log');
+function println(msg) {
+  log.textContent += msg + '\n';
+  log.scrollTop = log.scrollHeight;
+}
+
+async function test(name, fn) {
+  println('=== ' + name + ' ===');
+  try {
+    const result = await fn();
+    println('PASS: ' + JSON.stringify(result).substring(0, 100));
+  } catch (e) {
+    println('FAIL: ' + e.message);
+  }
+  println('');
+}
+
+// Test data
+const baseData = {
+  region: "QQ区",
+  server: "QQ",
+  loginType: "account",
+  totalAssets: 100,
+  harvardCoins: 100,
+  level: 80,
+  rank: "钻石",
+  safeBox: "9grid",
+  stamina: "7",
+  trainingLevel: "5级",
+  rangeLevel: "5级",
+  awmAmmo: 50,
+  banRecord: "无封禁记录",
+  isOwnFace: true,
+  superGuarantee: false,
+  knifeSkins: ["暗星"],
+  operatorSkins: {"威龙": ["凌霄戍卫"]},
+  price: 500,
+  note: "test",
+  mainInterface: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+  warehouse: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+  other: ""
+};
+
+async function runTests() {
+  log.textContent = '';
+
+  // Test 1: Basic valid data
+  await test('Valid data', async () => {
+    const res = await fetch('http://localhost:3001/api/sell-accounts', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(baseData)
+    });
+    return await res.json();
+  });
+
+  // Test 2: Empty strings instead of numbers
+  await test('Empty strings for numbers', async () => {
+    const data = {...baseData, totalAssets: "", harvardCoins: "", level: ""};
+    const res = await fetch('http://localhost:3001/api/sell-accounts', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    return await res.json();
+  });
+
+  // Test 3: undefined knifeSkins
+  await test('undefined knifeSkins', async () => {
+    const data = {...baseData, knifeSkins: undefined};
+    const res = await fetch('http://localhost:3001/api/sell-accounts', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    return await res.json();
+  });
+
+  // Test 4: NaN values
+  await test('NaN values', async () => {
+    const data = {...baseData, totalAssets: NaN, harvardCoins: NaN};
+    const res = await fetch('http://localhost:3001/api/sell-accounts', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    return await res.json();
+  });
+
+  // Test 5: Null values
+  await test('Null values', async () => {
+    const data = {...baseData, region: null, loginType: null};
+    const res = await fetch('http://localhost:3001/api/sell-accounts', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    return await res.json();
+  });
+
+  // Test 6: Empty required fields
+  await test('Empty required fields', async () => {
+    const data = {...baseData, region: "", server: "", loginType: ""};
+    const res = await fetch('http://localhost:3001/api/sell-accounts', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    return await res.json();
+  });
+
+  println('=== ALL TESTS COMPLETE ===');
+}
+</script>
+</body>
+</html>

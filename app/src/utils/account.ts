@@ -303,6 +303,8 @@ export function legacyToRentAccount(legacy: Record<string, unknown>): GameAccoun
     trainingLevel: legacy.training as string,
     rangeLevel: legacy.range as string,
     awmAmmo: parseInt((legacy.awm as string).replace('发', '')) || 0,
+    sixSetHead: (legacy.sixSetHead as number) || 0,
+    sixSetArmor: (legacy.sixSetArmor as number) || 0,
     knifeSkins: legacy.knifeExtra
       ? [(legacy.knife as string), ...((legacy.knifeExtra as string).split('、'))]
       : legacy.knife ? [(legacy.knife as string)] : [],
@@ -334,6 +336,8 @@ export function legacyToSellAccount(legacy: Record<string, unknown>): GameAccoun
     trainingLevel: (legacy.trainingLevel as string) || '1级',
     rangeLevel: (legacy.rangeLevel as string) || '1级',
     awmAmmo: legacy.awmAmmo as number,
+    sixSetHead: (legacy.sixSetHead as number) || 0,
+    sixSetArmor: (legacy.sixSetArmor as number) || 0,
     knifeSkins: (legacy.knifeSkins as string[]) || [],
     operatorSkins: (legacy.operatorSkins as Record<string, string[]>) || {},
     price: legacy.recyclePrice as number,

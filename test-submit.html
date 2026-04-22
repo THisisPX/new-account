@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head><title>API Test</title></head>
+<body>
+<h1>Testing Sell Account API</h1>
+<button onclick="testAPI()">Test Submit</button>
+<pre id="result"></pre>
+<script>
+async function testAPI() {
+  const result = document.getElementById('result');
+  result.textContent = 'Testing...';
+
+  const data = {
+    region: "QQ区",
+    server: "QQ",
+    loginType: "account",
+    totalAssets: 100,
+    harvardCoins: 100,
+    level: 80,
+    rank: "钻石",
+    safeBox: "9grid",
+    stamina: "7",
+    trainingLevel: "5级",
+    rangeLevel: "5级",
+    awmAmmo: 50,
+    banRecord: "无封禁记录",
+    isOwnFace: true,
+    superGuarantee: false,
+    knifeSkins: [],
+    operatorSkins: {},
+    price: 500,
+    note: "",
+    mainInterface: "",
+    warehouse: "",
+    other: ""
+  };
+
+  try {
+    const response = await fetch('http://localhost:3001/api/sell-accounts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    });
+
+    const text = await response.text();
+    result.textContent = `Status: ${response.status}\nHeaders: ${JSON.stringify([...response.headers.entries()])}\nBody: ${text}`;
+  } catch (error) {
+    result.textContent = `Error: ${error.message}`;
+  }
+}
+</script>
+</body>
+</html>

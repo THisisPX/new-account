@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head><title>API Debug Test</title></head>
+<body>
+<h1>API Debug Test</h1>
+<p>Open this file in your browser at <strong>http://localhost:5173/test-api.html</strong></p>
+<button onclick="testAPI()">Test Submit API</button>
+<pre id="result" style="background:#eee;padding:10px;overflow:auto;"></pre>
+
+<script>
+async function testAPI() {
+  const result = document.getElementById('result');
+  result.textContent = 'Testing...\n';
+
+  // This mimics exactly what the frontend sends
+  const data = {
+    id: 'SELL' + Date.now().toString().slice(-6),
+    userId: 'USER' + Math.floor(Math.random() * 10000),
+    userName: '用户' + Math.floor(Math.random() * 10000),
+    harvardCoins: 100,
+    totalAssets: 100,
+    rank: '钻石',
+    safeBox: '9grid',
+    stamina: '7',
+    trainingLevel: '5级',
+    rangeLevel: '5级',
+    awmAmmo: 50,
+    level: 80,
+    price: 500,
+    status: 'pending',
+    submittedAt: new Date().toLocaleString('zh-CN'),
+    region: 'QQ区',
+    server: 'QQ',
+    loginType: 'account',
+    knifeSkins: [],
+    operatorSkins: {},
+    note: '',
+    superGuarantee: false,
+    banRecord: '无封禁记录',
+    isOwnFace: true,
+    createdAt: new Date().toLocaleString('zh-CN'),
+    updatedAt: new Date().toLocaleString('zh-CN'),
+    mainInterface: '',
+    warehouse: '',
+    other: ''
+  };
+
+  result.textContent += 'Sending data:\n' + JSON.stringify(data, null, 2) + '\n\n';
+
+  try {
+    result.textContent += 'Fetching...\n';
+    const response = await fetch('http://localhost:3001/api/sell-accounts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    });
+
+    result.textContent += `Status: ${response.status}\n`;
+    result.textContent += `Status OK: ${response.ok}\n`;
+    result.textContent += `Headers: ${JSON.stringify([...response.headers.entries()], null, 2)}\n`;
+
+    const text = await response.text();
+    result.textContent += `Body: ${text}\n`;
+
+    try {
+      const json = JSON.parse(text);
+      result.textContent += `Parsed JSON: ${JSON.stringify(json, null, 2)}\n`;
+    } catch (e) {
+      result.textContent += `JSON parse error: ${e.message}\n`;
+    }
+  } catch (error) {
+    result.textContent += `Fetch Error: ${error.message}\n`;
+    result.textContent += `Error name: ${error.name}\n`;
+    result.textContent += `Error type: ${error.type}\n`;
+  }
+}
+</script>
+</body>
+</html>
