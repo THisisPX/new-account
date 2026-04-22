@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { sellAccountApi } from '@/api';
 import {
   Select,
   SelectContent,
@@ -44,11 +45,6 @@ const safeBoxes = [
   { value: '6grid', label: '6格安全箱 (2×3)', desc: '中级安全箱' },
   { value: 'other', label: '其它安全箱', desc: '低级或无安全箱' },
 ];
-const staminaLevels = [
-  { value: '7', label: '7体', desc: '满级体力' },
-  { value: '5-6', label: '5-6体', desc: '中高体力' },
-  { value: '3-4', label: '3-4体', desc: '中低体力' },
-];
 const trainingLevels = ['1级', '2级', '3级', '4级', '5级', '6级', '7级'];
 const rangeLevels = ['1级', '2级', '3级', '4级', '5级', '6级', '7级'];
 const banRecords = ['无封禁记录', '有封禁记录（已解封）', '有封禁记录（未解封）'];
@@ -82,7 +78,6 @@ export default function SellPage() {
     level: string;
     rank: string;
     safeBox: SafeBoxType | '';
-    stamina: StaminaLevel | '';
     trainingLevel: string;
     rangeLevel: string;
     awmAmmo: string;
@@ -98,7 +93,6 @@ export default function SellPage() {
     level: '',
     rank: '',
     safeBox: '' as SafeBoxType | '',
-    stamina: '' as StaminaLevel | '',
     trainingLevel: '',
     rangeLevel: '',
     awmAmmo: '',
@@ -150,13 +144,22 @@ export default function SellPage() {
     }
   }, [formData.harvardCoins]);
 
-  // 计算回收价格
+  // 计算回收价格（体力等级由训练中心等级自动推导）
   useEffect(() => {
     const harvardCoins = parseFloat(formData.harvardCoins);
     const safeBox = formData.safeBox as SafeBoxType;
-    const stamina = formData.stamina as StaminaLevel;
 
-    if (harvardCoins && safeBox && stamina) {
+    // 从训练中心等级推导体力等级
+    // 1-3级 → 3-4体, 4-5级 → 5-6体, 6-7级 → 7体
+    let stamina: StaminaLevel = '3-4';
+    if (formData.trainingLevel) {
+      const level = parseInt(formData.trainingLevel.replace('级', ''));
+      if (level >= 6) stamina = '7';
+      else if (level >= 4) stamina = '5-6';
+      else stamina = '3-4';
+    }
+
+    if (harvardCoins && safeBox && formData.trainingLevel) {
       const result = calculateRecyclePrice(
         harvardCoins,
         safeBox,
@@ -174,7 +177,7 @@ export default function SellPage() {
       setRecyclePrice(null);
       setPriceDetails([]);
     }
-  }, [formData.harvardCoins, formData.safeBox, formData.stamina, selectedKnives, selectedOperatorSkins]);
+  }, [formData.harvardCoins, formData.safeBox, formData.trainingLevel, selectedKnives, selectedOperatorSkins]);
 
   // 处理表单变化
   const handleChange = (field: keyof typeof formData, value: string | boolean) => {
@@ -206,7 +209,7 @@ export default function SellPage() {
   // 提交表单
   const handleSubmit = async () => {
     // 验证必填字段
-    if (!formData.region || !formData.loginType || !formData.harvardCoins || !formData.safeBox || !formData.stamina) {
+    if (!formData.region || !formData.loginType || !formData.harvardCoins || !formData.safeBox || !formData.trainingLevel) {
       alert('请填写完整的账号信息');
       return;
     }
@@ -220,19 +223,34 @@ export default function SellPage() {
     setIsSubmitting(true);
 
     // 构造提交数据 - 使用统一的数据结构
+    // 体力等级由训练中心等级推导
+    const deriveStamina = (level: string): StaminaLevel => {
+      const lvl = parseInt(level.replace('级', ''));
+      if (lvl >= 6) return '7';
+      if (lvl >= 4) return '5-6';
+      return '3-4';
+    };
+
+    // Helper to safely parse numbers, defaulting to 0
+    const toNumber = (val: string | undefined | null): number => {
+      if (!val || val === '') return 0;
+      const n = parseFloat(val);
+      return isNaN(n) ? 0 : n;
+    };
+
     const submitData: GameAccountSell = {
       id: 'SELL' + Date.now().toString().slice(-6),
       userId: 'USER' + Math.floor(Math.random() * 10000),
       userName: '用户' + Math.floor(Math.random() * 10000),
-      harvardCoins: parseFloat(formData.harvardCoins) || 0,
-      totalAssets: parseFloat(formData.totalAssets) || parseFloat(formData.harvardCoins) || 0,
+      harvardCoins: toNumber(formData.harvardCoins),
+      totalAssets: toNumber(formData.totalAssets) || toNumber(formData.harvardCoins),
       rank: (formData.rank as GameAccountSell['rank']) || '未知',
       safeBox: formData.safeBox as SafeBoxType,
-      stamina: formData.stamina as StaminaLevel,
+      stamina: formData.trainingLevel ? deriveStamina(formData.trainingLevel) : '3-4',
       trainingLevel: formData.trainingLevel || '1级',
       rangeLevel: formData.rangeLevel || '1级',
-      awmAmmo: parseInt(formData.awmAmmo) || 0,
-      level: parseInt(formData.level) || 0,
+      awmAmmo: toNumber(formData.awmAmmo),
+      level: toNumber(formData.level),
       price: recyclePrice || 0,
       status: 'pending',
       submittedAt: new Date().toLocaleString('zh-CN'),
@@ -241,27 +259,30 @@ export default function SellPage() {
       loginType: formData.loginType as LoginTypeCode,
       knifeSkins: selectedKnives,
       operatorSkins: selectedOperatorSkins,
-      note: formData.note,
-      superGuarantee: formData.superGuarantee,
+      note: formData.note || '',
+      superGuarantee: formData.superGuarantee || false,
       banRecord: formData.banRecord || '无封禁记录',
       isOwnFace: formData.isOwnFace === '是本人',
       createdAt: new Date().toLocaleString('zh-CN'),
       updatedAt: new Date().toLocaleString('zh-CN'),
+      mainInterface: uploadedImages.mainInterface || '',
+      warehouse: uploadedImages.warehouse || '',
+      other: uploadedImages.other || '',
     };
     
-    // 保存到 localStorage（模拟后台存储）
+    // 提交到后端 API
     try {
-      const existingData = JSON.parse(localStorage.getItem('sellAccounts') || '[]');
-      existingData.unshift(submitData);
-      localStorage.setItem('sellAccounts', JSON.stringify(existingData));
-      
+      console.log('Submitting data:', JSON.stringify(submitData, null, 2));
+      const result = await sellAccountApi.create(submitData);
+      console.log('Submit success:', result);
       setSubmitSuccess(true);
       setTimeout(() => {
         setIsModalOpen(true);
         setSubmitSuccess(false);
       }, 500);
-    } catch (error) {
-      alert('提交失败，请重试');
+    } catch (error: any) {
+      console.error('Submit failed:', error);
+      alert('提交失败，请重试: ' + (error.message || '未知错误'));
     } finally {
       setIsSubmitting(false);
     }
@@ -396,7 +417,7 @@ export default function SellPage() {
               <Label className="text-gray-300 mb-2 block">仓库总资产 <span className="text-red-500">*</span></Label>
               <div className="relative">
                 <Input
-                  type="number"
+                  inputMode="decimal"
                   placeholder="如：50"
                   value={formData.totalAssets}
                   onChange={(e) => handleChange('totalAssets', e.target.value)}
@@ -411,7 +432,7 @@ export default function SellPage() {
               <Label className="text-gray-300 mb-2 block">哈佛币数量 <span className="text-red-500">*</span></Label>
               <div className="relative">
                 <Input
-                  type="number"
+                  inputMode="decimal"
                   placeholder="如：237.1"
                   value={formData.harvardCoins}
                   onChange={(e) => handleChange('harvardCoins', e.target.value)}
@@ -426,7 +447,7 @@ export default function SellPage() {
             <div>
               <Label className="text-gray-300 mb-2 block">等级 <span className="text-red-500">*</span></Label>
               <Input
-                type="number"
+                inputMode="numeric"
                 placeholder="如：60"
                 value={formData.level}
                 onChange={(e) => handleChange('level', e.target.value)}
@@ -471,26 +492,6 @@ export default function SellPage() {
               </p>
             </div>
 
-            {/* 体力等级 */}
-            <div>
-              <Label className="text-gray-300 mb-2 block">体力等级 <span className="text-red-500">*</span></Label>
-              <Select value={formData.stamina} onValueChange={(v) => handleChange('stamina', v)}>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                  <SelectValue placeholder="请选择" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-white/10">
-                  {staminaLevels.map(s => (
-                    <SelectItem key={s.value} value={s.value}>
-                      <div>
-                        <div>{s.label}</div>
-                        <div className="text-xs text-gray-500">{s.desc}</div>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* 训练中心等级 */}
             <div>
               <Label className="text-gray-300 mb-2 block">训练中心等级 <span className="text-xs text-red-500">(3级起收)</span></Label>
@@ -521,7 +522,7 @@ export default function SellPage() {
             <div>
               <Label className="text-gray-300 mb-2 block">AWM子弹数量</Label>
               <Input
-                type="number"
+                inputMode="numeric"
                 placeholder="如：70"
                 value={formData.awmAmmo}
                 onChange={(e) => handleChange('awmAmmo', e.target.value)}

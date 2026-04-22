@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { sellAccountApi } from '@/api';
 import {
   Search,
   CheckCircle,
@@ -157,24 +158,34 @@ export default function SellAccounts() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [accounts, setAccounts] = useState<SellAccount[]>([]);
   
-  const loadAccounts = () => {
+  // Helper to ensure knifeSkins is always an array
+function ensureKnifeSkins(account: SellAccount): SellAccount {
+  if (Array.isArray(account.knifeSkins)) {
+    return account;
+  }
+  if (typeof account.knifeSkins === 'string') {
     try {
-      const storedData = localStorage.getItem('sellAccounts');
-      if (storedData) {
-        const parsedData = JSON.parse(storedData);
-        setAccounts([...parsedData, ...mockSellAccounts]);
-      } else {
-        setAccounts(mockSellAccounts);
-      }
+      return { ...account, knifeSkins: JSON.parse(account.knifeSkins) };
+    } catch {
+      return { ...account, knifeSkins: [] };
+    }
+  }
+  return { ...account, knifeSkins: [] };
+}
+
+const loadAccounts = async () => {
+    try {
+      const data = await sellAccountApi.getAll();
+      // Ensure all accounts have knifeSkins as arrays
+      const safeData = data.map(ensureKnifeSkins);
+      setAccounts(safeData.length > 0 ? safeData : mockSellAccounts);
     } catch (error) {
       setAccounts(mockSellAccounts);
     }
   };
-  
+
   useEffect(() => {
     loadAccounts();
-    const interval = setInterval(loadAccounts, 1000);
-    return () => clearInterval(interval);
   }, []);
 
   const filteredAccounts = accounts.filter((account) => {
@@ -209,30 +220,26 @@ export default function SellAccounts() {
     return matchesSearch && matchesStatus && matchesTraining && matchesRange && matchesAwmAmmo;
   });
 
-  const handleApprove = (account: SellAccount) => {
-    const updatedAccounts = accounts.map(a => 
-      a.id === account.id ? { ...a, status: 'approved' as const } : a
-    );
-    setAccounts(updatedAccounts);
-    
-    const storedData = JSON.parse(localStorage.getItem('sellAccounts') || '[]');
-    const updatedStored = storedData.map((a: SellAccount) => 
-      a.id === account.id ? { ...a, status: 'approved' } : a
-    );
-    localStorage.setItem('sellAccounts', JSON.stringify(updatedStored));
+  const handleApprove = async (account: SellAccount) => {
+    try {
+      await sellAccountApi.approve(account.id);
+      setAccounts(accounts.map(a =>
+        a.id === account.id ? { ...a, status: 'approved' as const } : a
+      ));
+    } catch (error) {
+      alert('审核失败，请重试');
+    }
   };
 
-  const handleReject = (account: SellAccount) => {
-    const updatedAccounts = accounts.map(a => 
-      a.id === account.id ? { ...a, status: 'rejected' as const } : a
-    );
-    setAccounts(updatedAccounts);
-    
-    const storedData = JSON.parse(localStorage.getItem('sellAccounts') || '[]');
-    const updatedStored = storedData.map((a: SellAccount) => 
-      a.id === account.id ? { ...a, status: 'rejected' } : a
-    );
-    localStorage.setItem('sellAccounts', JSON.stringify(updatedStored));
+  const handleReject = async (account: SellAccount) => {
+    try {
+      await sellAccountApi.reject(account.id);
+      setAccounts(accounts.map(a =>
+        a.id === account.id ? { ...a, status: 'rejected' as const } : a
+      ));
+    } catch (error) {
+      alert('拒绝失败，请重试');
+    }
   };
 
   return (
@@ -477,7 +484,7 @@ export default function SellAccounts() {
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => {
-                          setSelectedAccount(account);
+                          setSelectedAccount(ensureKnifeSkins(account));
                           setIsDetailOpen(true);
                         }}
                         className="p-1.5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"
@@ -579,6 +586,66 @@ export default function SellAccounts() {
                     {selectedAccount.knifeSkins.map((knife) => (
                       <span key={knife} className="px-2 py-1 bg-primary/10 rounded text-xs text-primary">{knife}</span>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 截图预览 */}
+              {(selectedAccount.mainInterface || selectedAccount.warehouse || selectedAccount.other) && (
+                <div className="bg-white/5 rounded-lg p-4">
+                  <h4 className="text-primary font-medium mb-3 text-sm">截图</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {selectedAccount.mainInterface && (
+                      <div>
+                        <p className="text-gray-400 text-xs mb-1">主界面</p>
+                        <img
+                          src={selectedAccount.mainInterface}
+                          alt="主界面"
+                          className="w-full h-32 object-cover rounded border border-white/10"
+                        />
+                        <a
+                          href={selectedAccount.mainInterface}
+                          download={`${selectedAccount.id}_mainInterface.jpg`}
+                          className="mt-1 block text-center text-xs text-primary hover:text-primary-dark"
+                        >
+                          下载
+                        </a>
+                      </div>
+                    )}
+                    {selectedAccount.warehouse && (
+                      <div>
+                        <p className="text-gray-400 text-xs mb-1">主仓库</p>
+                        <img
+                          src={selectedAccount.warehouse}
+                          alt="主仓库"
+                          className="w-full h-32 object-cover rounded border border-white/10"
+                        />
+                        <a
+                          href={selectedAccount.warehouse}
+                          download={`${selectedAccount.id}_warehouse.jpg`}
+                          className="mt-1 block text-center text-xs text-primary hover:text-primary-dark"
+                        >
+                          下载
+                        </a>
+                      </div>
+                    )}
+                    {selectedAccount.other && (
+                      <div>
+                        <p className="text-gray-400 text-xs mb-1">其他截图</p>
+                        <img
+                          src={selectedAccount.other}
+                          alt="其他截图"
+                          className="w-full h-32 object-cover rounded border border-white/10"
+                        />
+                        <a
+                          href={selectedAccount.other}
+                          download={`${selectedAccount.id}_other.jpg`}
+                          className="mt-1 block text-center text-xs text-primary hover:text-primary-dark"
+                        >
+                          下载
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -740,7 +807,7 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const submitData: SellAccount = {
@@ -773,9 +840,7 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
     };
     
     try {
-      const existingData = JSON.parse(localStorage.getItem('sellAccounts') || '[]');
-      existingData.unshift(submitData);
-      localStorage.setItem('sellAccounts', JSON.stringify(existingData));
+      await sellAccountApi.create(submitData);
       onSuccess();
     } catch (error) {
       alert('添加失败，请重试');

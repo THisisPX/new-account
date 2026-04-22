@@ -6,15 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Shield, Eye, EyeOff, Lock, User, AlertTriangle, RefreshCw } from 'lucide-react';
 import {
   ADMIN_CONFIG,
-  getLoginAttempts,
   incrementLoginAttempts,
   resetLoginAttempts,
   isLockedOut,
   getRemainingLockoutTime,
   generateCaptcha,
-  generateToken,
   isAuthenticated,
 } from '@/config/admin';
+import { adminApi } from '@/api';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
@@ -80,36 +79,28 @@ export default function AdminLogin() {
 
     setIsLoading(true);
 
-    // 模拟登录验证
-    setTimeout(() => {
-      if (
-        formData.username === ADMIN_CONFIG.CREDENTIALS.username &&
-        formData.password === ADMIN_CONFIG.CREDENTIALS.password
-      ) {
-        // 登录成功
-        resetLoginAttempts();
-        const token = generateToken();
-        localStorage.setItem('adminToken', token);
-        localStorage.setItem('adminLoginTime', Date.now().toString());
-        
-        // 跳转到后台首页
-        navigate(ADMIN_CONFIG.ADMIN_PATH + '/dashboard', { replace: true });
+    try {
+      const result = await adminApi.login(formData.username, formData.password);
+      // 登录成功
+      resetLoginAttempts();
+      localStorage.setItem('adminToken', result.token);
+      localStorage.setItem('adminLoginTime', Date.now().toString());
+      // 跳转到后台首页
+      navigate(ADMIN_CONFIG.ADMIN_PATH + '/dashboard', { replace: true });
+    } catch (err: any) {
+      // 登录失败
+      incrementLoginAttempts();
+
+      if (isLockedOut()) {
+        setError(`登录失败次数过多，请 ${ADMIN_CONFIG.LOGIN.LOCKOUT_DURATION} 分钟后重试`);
+        setLockoutTime(ADMIN_CONFIG.LOGIN.LOCKOUT_DURATION);
       } else {
-        // 登录失败
-        incrementLoginAttempts();
-        const attempts = getLoginAttempts();
-        const remaining = ADMIN_CONFIG.LOGIN.MAX_ATTEMPTS - attempts;
-        
-        if (isLockedOut()) {
-          setError(`登录失败次数过多，请 ${ADMIN_CONFIG.LOGIN.LOCKOUT_DURATION} 分钟后重试`);
-          setLockoutTime(ADMIN_CONFIG.LOGIN.LOCKOUT_DURATION);
-        } else {
-          setError(`用户名或密码错误，还剩 ${remaining} 次机会`);
-        }
-        refreshCaptcha();
+        setError(err.message || '用户名或密码错误');
       }
+      refreshCaptcha();
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (

@@ -18,10 +18,11 @@ import {
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import RentContactModal from '@/components/RentContactModal';
-import type { GameAccountRent as Account, GameAccountRent } from '@/types/account';
+import type { GameAccountRent as Account } from '@/types/account';
 import {
   safeBoxToShortDisplay,
 } from '@/utils/account';
+import { rentAccountApi } from '@/api';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -51,7 +52,7 @@ const operatorSkins: Record<string, string[]> = {
 };
 
 // 模拟账号数据 - 使用统一的 GameAccountRent 类型
-const mockAccounts: GameAccountRent[] = [
+const mockAccounts: Account[] = [
   {
     id: 'SJZ307642',
     region: '广东省',
@@ -241,20 +242,22 @@ export default function RentPage() {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [allAccounts, setAllAccounts] = useState<Account[]>(mockAccounts);
   const [filteredAccounts, setFilteredAccounts] = useState<Account[]>(mockAccounts);
-  
-  // 从 localStorage 加载后台添加的账号
+
+  // 从 API 加载账号数据（带自动刷新）
   useEffect(() => {
-    try {
-      const storedData = localStorage.getItem('rentAccounts');
-      if (storedData) {
-        const parsedData = JSON.parse(storedData) as Account[];
-        // 合并 mock 数据和后台添加的数据
-        const combined = [...parsedData, ...mockAccounts];
-        setAllAccounts(combined);
+    async function loadAccounts() {
+      try {
+        const accounts = await rentAccountApi.getAll();
+        setAllAccounts(accounts);
+      } catch (error) {
+        console.error('加载账号数据失败:', error);
+        setAllAccounts([]);
       }
-    } catch (error) {
-      console.error('加载账号数据失败:', error);
     }
+    loadAccounts();
+    // 每 5 秒自动刷新一次
+    const interval = setInterval(loadAccounts, 5000);
+    return () => clearInterval(interval);
   }, []);
   
   // 弹窗状态

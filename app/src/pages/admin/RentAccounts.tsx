@@ -32,6 +32,7 @@ import {
   loginTypeToDisplay,
   safeBoxToShortDisplay,
 } from '@/utils/account';
+import { rentAccountApi } from '@/api';
 
 // 筛选选项数据（与主页租号页面一致）
 const filterOptions = {
@@ -121,16 +122,11 @@ export default function RentAccounts() {
   const [selectedAccount, setSelectedAccount] = useState<GameAccountRent | null>(null);
   const [accounts, setAccounts] = useState<GameAccountRent[]>([]);
 
-  // 从 localStorage 加载数据
-  const loadAccounts = () => {
+  // 从后端 API 加载数据
+  const loadAccounts = async () => {
     try {
-      const storedData = localStorage.getItem('rentAccounts');
-      if (storedData) {
-        const parsedData = JSON.parse(storedData);
-        setAccounts([...parsedData, ...mockAccounts]);
-      } else {
-        setAccounts(mockAccounts);
-      }
+      const data = await rentAccountApi.getAllAdmin();
+      setAccounts(data.length > 0 ? data : mockAccounts);
     } catch (error) {
       setAccounts(mockAccounts);
     }
@@ -138,8 +134,6 @@ export default function RentAccounts() {
 
   useEffect(() => {
     loadAccounts();
-    const interval = setInterval(loadAccounts, 1000);
-    return () => clearInterval(interval);
   }, []);
 
   const filteredAccounts = accounts.filter((account) => {
@@ -461,7 +455,7 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const harvardCoins = parseFloat(formData.harvardCoins);
@@ -492,11 +486,9 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
       updatedAt: new Date().toISOString().split('T')[0],
     };
     
-    // 保存到 localStorage
+    // 提交到后端 API
     try {
-      const existingData = JSON.parse(localStorage.getItem('rentAccounts') || '[]');
-      existingData.unshift(submitData);
-      localStorage.setItem('rentAccounts', JSON.stringify(existingData));
+      await rentAccountApi.create(submitData);
       onSuccess();
     } catch (error) {
       alert('添加失败，请重试');

@@ -5,7 +5,7 @@ export const ADMIN_CONFIG = {
   // 后台路径 - 修改这个让后台更难被发现
   // 当前路径：/x9k7m3p2（随机生成）
   ADMIN_PATH: '/x9k7m3p2',
-  
+
   // 登录配置
   LOGIN: {
     // 最大登录失败次数
@@ -15,51 +15,33 @@ export const ADMIN_CONFIG = {
     // 是否启用验证码
     ENABLE_CAPTCHA: true,
   },
-  
-  // 管理员账号（生产环境应该从服务器获取）
-  CREDENTIALS: {
-    username: 'admin',
-    // 生产环境密码：Delta@Rent#2024!Secure
-    password: 'Delta@Rent#2024!Secure',
-  },
-  
-  // JWT配置
-  JWT: {
-    // 密钥（随机生成）
-    SECRET: 'dR7#kL9$mN2@vB5*wQ8^jH4&cF6',
-    // 过期时间（小时）
-    EXPIRES: 24,
-  },
+
+  // API 配置
+  API_URL: 'http://localhost:3001/api',
 };
 
-// 检查是否已登录
+// 检查是否已登录（通过检查 localStorage 中的 token）
 export const isAuthenticated = (): boolean => {
   if (typeof window === 'undefined') return false;
-  
+
   const token = localStorage.getItem('adminToken');
   const loginTime = localStorage.getItem('adminLoginTime');
-  
+
   // 检查令牌是否存在
   if (!token) {
     return false;
   }
-  
-  // 检查令牌是否有效
-  if (!verifyToken(token)) {
-    clearAuth();
-    return false;
-  }
-  
-  // 检查登录是否过期
+
+  // 检查登录是否过期（24小时）
   if (loginTime) {
     const elapsed = Date.now() - parseInt(loginTime, 10);
-    const maxAge = ADMIN_CONFIG.JWT.EXPIRES * 3600 * 1000;
+    const maxAge = 24 * 3600 * 1000; // 24 hours
     if (elapsed > maxAge) {
       clearAuth();
       return false;
     }
   }
-  
+
   return true;
 };
 
@@ -68,6 +50,8 @@ export const clearAuth = (): void => {
   if (typeof window === 'undefined') return;
   localStorage.removeItem('adminToken');
   localStorage.removeItem('adminLoginTime');
+  localStorage.removeItem('loginAttempts');
+  localStorage.removeItem('lastAttemptTime');
 };
 
 // 获取存储的登录失败次数
@@ -130,46 +114,16 @@ export const generateCaptcha = (): { question: string; answer: string } => {
   const num2 = Math.floor(Math.random() * 10) + 1;
   const operations = ['+', '-'];
   const operation = operations[Math.floor(Math.random() * operations.length)];
-  
+
   let answer: number;
   if (operation === '+') {
     answer = num1 + num2;
   } else {
     answer = num1 - num2;
   }
-  
+
   return {
     question: `${num1} ${operation} ${num2} = ?`,
     answer: answer.toString(),
   };
-};
-
-// 验证JWT令牌
-export const verifyToken = (token: string): boolean => {
-  try {
-    // 简单的令牌验证（生产环境应该使用真正的JWT库）
-    const parts = token.split('.');
-    if (parts.length !== 3) return false;
-    
-    const payload = JSON.parse(atob(parts[1]));
-    const now = Math.floor(Date.now() / 1000);
-    
-    return payload.exp > now;
-  } catch {
-    return false;
-  }
-};
-
-// 生成JWT令牌
-export const generateToken = (): string => {
-  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-  const now = Math.floor(Date.now() / 1000);
-  const payload = btoa(JSON.stringify({
-    sub: 'admin',
-    iat: now,
-    exp: now + ADMIN_CONFIG.JWT.EXPIRES * 3600,
-  }));
-  const signature = btoa(ADMIN_CONFIG.JWT.SECRET);
-  
-  return `${header}.${payload}.${signature}`;
 };

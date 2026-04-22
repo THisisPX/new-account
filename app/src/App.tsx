@@ -12,6 +12,7 @@ import CTA from './sections/CTA';
 import Footer from './sections/Footer';
 import RentPage from './pages/RentPage';
 import SellPage from './pages/SellPage';
+import RunningKnifePage from './pages/RunningKnifePage';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminLayout from './pages/admin/AdminLayout';
 import Dashboard from './pages/admin/Dashboard';
@@ -84,6 +85,7 @@ function App() {
                   <Route path="/" element={<HomePage />} />
                   <Route path="/rent" element={<RentPage />} />
                   <Route path="/sell" element={<SellPage />} />
+                  <Route path="/running-knife" element={<RunningKnifePage />} />
                 </Routes>
               </main>
               <Footer className="relative z-10" />

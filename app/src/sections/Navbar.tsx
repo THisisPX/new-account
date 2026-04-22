@@ -20,6 +20,7 @@ export default function Navbar() {
     { name: '首页', href: '/' },
     { name: '租号', href: '/rent' },
     { name: '我要出号', href: '/sell' },
+    { name: '跑刀服务', href: '/running-knife' },
     { name: '支持', href: '/#why-us' },
   ];
 

@@ -104,6 +104,9 @@ export interface GameAccountSell extends GameAccountBase {
   userId: string;
   userName: string;
   submittedAt: string;
+  mainInterface?: string;
+  warehouse?: string;
+  other?: string;
 }
 
 // ============================================================
