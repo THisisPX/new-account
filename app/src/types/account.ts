@@ -105,6 +105,7 @@ export interface GameAccountSell extends GameAccountBase {
   superGuarantee: boolean;
   userId: string;
   userName: string;
+  accountName?: string;  // 账号名称，可自定义
   submittedAt: string;
   mainInterface?: string;
   warehouse?: string;

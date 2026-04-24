@@ -80,6 +80,7 @@ router.post('/', (req, res) => {
       id,
       userId,
       userName,
+      accountName,
       region,
       server,
       loginType,
@@ -111,16 +112,17 @@ router.post('/', (req, res) => {
 
     db.prepare(`
       INSERT INTO sell_accounts (
-        id, userId, userName, region, server, loginType, totalAssets, harvardCoins,
+        id, userId, userName, accountName, region, server, loginType, totalAssets, harvardCoins,
         level, rank, safeBox, stamina, trainingLevel, rangeLevel, awmAmmo,
         sixSetHead, sixSetArmor, banRecord, isOwnFace, superGuarantee, knifeSkins, operatorSkins,
         price, note, status, submittedAt, createdAt, updatedAt,
         mainInterface, warehouse, other
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?)
     `).run([
       accountId,
       userId || 'USER' + Math.floor(Math.random() * 10000),
       userName || '用户' + Math.floor(Math.random() * 10000),
+      accountName || '',
       region,
       server,
       loginType,

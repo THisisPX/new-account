@@ -86,6 +86,7 @@ const mockSellAccounts: SellAccount[] = [
     id: 'SELL001',
     userId: 'USER001',
     userName: '陈浩然',
+    accountName: '珠三角巅峰钻石号',
     region: 'QQ区',
     server: 'QQ',
     loginType: 'account',
@@ -116,6 +117,7 @@ const mockSellAccounts: SellAccount[] = [
     id: 'SELL002',
     userId: 'USER002',
     userName: '李文博',
+    accountName: '黑鹰满级全皮肤',
     region: '微信区',
     server: '微信',
     loginType: 'qrcode',
@@ -413,6 +415,9 @@ const loadAccounts = async () => {
                   <td className="px-3 py-3">
                     <span className="text-primary font-mono text-xs">{account.id}</span>
                     <p className="text-white text-xs">{account.userName}</p>
+                    {(account as any).accountName && (
+                      <p className="text-gray-500 text-xs">"{account.accountName}"</p>
+                    )}
                   </td>
                   <td className="px-3 py-3">
                     <p className="text-gray-400 text-xs">{account.region}</p>
@@ -552,6 +557,9 @@ const loadAccounts = async () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div><p className="text-gray-400 text-xs">用户名</p><p className="text-white text-sm">{selectedAccount.userName}</p></div>
                   <div><p className="text-gray-400 text-xs">用户ID</p><p className="text-white text-sm">{selectedAccount.userId}</p></div>
+                  {(selectedAccount as any).accountName && (
+                    <div><p className="text-gray-400 text-xs">账号名称</p><p className="text-white text-sm">"{selectedAccount.accountName}"</p></div>
+                  )}
                 </div>
               </div>
 
@@ -736,6 +744,7 @@ const loadAccounts = async () => {
 function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const [formData, setFormData] = useState<{
     userName: string;
+    accountName: string;
     region: string;
     loginType: LoginTypeCode | '';
     totalAssets: string;
@@ -755,6 +764,7 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
     note: string;
   }>({
     userName: '',
+    accountName: '',
     region: '',
     loginType: '' as LoginTypeCode | '',
     totalAssets: '',
@@ -831,6 +841,7 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
       id: 'SELL' + Date.now().toString().slice(-6),
       userId: 'USER' + Math.floor(Math.random() * 10000),
       userName: formData.userName || '用户' + Math.floor(Math.random() * 10000),
+      accountName: formData.accountName,
       region: formData.region,
       server: formData.region === 'QQ区' ? 'QQ' : '微信',
       loginType: formData.loginType as LoginTypeCode,
@@ -878,6 +889,15 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
               placeholder="如：陈浩然"
               value={formData.userName}
               onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
+              className="bg-white/5 border-white/10 text-white"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-sm text-gray-400">账号名称</Label>
+            <Input
+              placeholder="给自己账号取个名字"
+              value={formData.accountName}
+              onChange={(e) => setFormData({ ...formData, accountName: e.target.value })}
               className="bg-white/5 border-white/10 text-white"
             />
           </div>

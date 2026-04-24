@@ -180,6 +180,7 @@ async function initDb() {
       id TEXT PRIMARY KEY,
       userId TEXT,
       userName TEXT,
+      accountName TEXT DEFAULT '',
       region TEXT NOT NULL,
       server TEXT NOT NULL,
       loginType TEXT NOT NULL,

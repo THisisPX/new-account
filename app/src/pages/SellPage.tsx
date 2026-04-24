@@ -71,6 +71,7 @@ export default function SellPage() {
   
   // 表单状态
   const [formData, setFormData] = useState<{
+    accountName: string;
     region: string;
     loginType: LoginTypeCode | '';
     totalAssets: string;
@@ -88,6 +89,7 @@ export default function SellPage() {
     superGuarantee: boolean;
     note: string;
   }>({
+    accountName: '',
     region: '',
     loginType: '' as LoginTypeCode | '',
     totalAssets: '',
@@ -253,6 +255,7 @@ export default function SellPage() {
       id: 'SELL' + Date.now().toString().slice(-6),
       userId: 'USER' + Math.floor(Math.random() * 10000),
       userName: '用户' + Math.floor(Math.random() * 10000),
+      accountName: formData.accountName || '',
       harvardCoins: toNumber(formData.harvardCoins),
       totalAssets: toNumber(formData.totalAssets) || toNumber(formData.harvardCoins),
       rank: (formData.rank as GameAccountSell['rank']) || '未知',
@@ -387,6 +390,18 @@ export default function SellPage() {
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            {/* 账号名称 */}
+            <div>
+              <Label className="text-gray-300 mb-2 block">账号名称</Label>
+              <Input
+                placeholder="给自己账号取个名字，如：珠三角巅峰满级号"
+                value={formData.accountName}
+                onChange={(e) => handleChange('accountName', e.target.value)}
+                className="bg-white/5 border-white/10 text-white"
+              />
+              <p className="text-xs text-gray-500 mt-2">可填写一个有标志的名字，方便识别</p>
+            </div>
+
             {/* 区服 */}
             <div>
               <Label className="text-gray-300 mb-2 block">区服 <span className="text-red-500">*</span></Label>
