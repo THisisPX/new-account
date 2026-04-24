@@ -347,6 +347,17 @@ export default function RentPage() {
       );
     }
 
+    // 辅助函数：获取显示用的刀皮列表（优先显示匹配的刀皮）
+    const getDisplayKnifeSkins = (account: Account, filterKnife: string): string[] => {
+      if (filterKnife && filterKnife !== '全部') {
+        const matched = account.knifeSkins.find(k => k === filterKnife);
+        if (matched) {
+          return [matched, ...account.knifeSkins.filter(k => k !== matched)];
+        }
+      }
+      return account.knifeSkins;
+    };
+
     // 训练中心筛选
     if (filters.training !== '全部') {
       result = result.filter(account => account.trainingLevel === filters.training);
@@ -643,7 +654,7 @@ export default function RentPage() {
       </div>
 
       <div className="flex flex-wrap gap-1">
-        {account.knifeSkins.slice(0, 1).map(knife => (
+        {getDisplayKnifeSkins(account, filters.knife).slice(0, 1).map(knife => (
           <span key={knife} className="px-2 py-0.5 bg-primary/10 rounded text-xs text-primary">{knife}</span>
         ))}
       </div>
@@ -909,7 +920,7 @@ export default function RentPage() {
                     <td className="px-3 lg:px-4 py-3 lg:py-4 text-gray-400 text-xs lg:text-sm">{account.awmAmmo}发</td>
                     <td className="px-3 lg:px-4 py-3 lg:py-4 text-gray-400 text-xs lg:text-sm">{(account as any).sixSetHead || 0}/{(account as any).sixSetArmor || 0}</td>
                     <td className="px-3 lg:px-4 py-3 lg:py-4">
-                      <span className="px-2 py-0.5 bg-primary/10 rounded text-xs text-primary">{account.knifeSkins[0]}</span>
+                      <span className="px-2 py-0.5 bg-primary/10 rounded text-xs text-primary">{getDisplayKnifeSkins(account, filters.knife)[0]}</span>
                     </td>
                     <td className="px-3 lg:px-4 py-3 lg:py-4">
                       <div className="space-y-1 max-w-[200px]">
