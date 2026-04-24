@@ -643,7 +643,7 @@ export default function RentPage() {
       </div>
 
       <div className="flex flex-wrap gap-1">
-        {getDisplayKnifeSkins(account, filters.knife).slice(0, 1).map(knife => (
+        {getDisplayKnifeSkins(account, filters.knife).map(knife => (
           <span key={knife} className="px-2 py-0.5 bg-primary/10 rounded text-xs text-primary">{knife}</span>
         ))}
       </div>
@@ -920,7 +920,11 @@ export default function RentPage() {
                     <td className="px-3 lg:px-4 py-3 lg:py-4 text-gray-400 text-xs lg:text-sm">{account.awmAmmo}发</td>
                     <td className="px-3 lg:px-4 py-3 lg:py-4 text-gray-400 text-xs lg:text-sm">{(account as any).sixSetHead || 0}/{(account as any).sixSetArmor || 0}</td>
                     <td className="px-3 lg:px-4 py-3 lg:py-4">
-                      <span className="px-2 py-0.5 bg-primary/10 rounded text-xs text-primary">{getDisplayKnifeSkins(account, filters.knife)[0]}</span>
+                      <div className="flex flex-wrap gap-1">
+                        {getDisplayKnifeSkins(account, filters.knife).map(knife => (
+                          <span key={knife} className="px-2 py-0.5 bg-primary/10 rounded text-xs text-primary">{knife}</span>
+                        ))}
+                      </div>
                     </td>
                     <td className="px-3 lg:px-4 py-3 lg:py-4">
                       <div className="space-y-1 max-w-[200px]">
