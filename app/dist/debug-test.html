@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head><title>Browser API Test</title></head>
+<body>
+<h1>Browser API Test (Through Vite Proxy)</h1>
+<button onclick="runTest()">Run Test</button>
+<pre id="log" style="background:#eee;padding:10px;height:300px;overflow:auto;"></pre>
+
+<script>
+const log = document.getElementById('log');
+function println(msg) {
+  log.textContent += msg + '\n';
+  log.scrollTop = log.scrollHeight;
+}
+
+async function runTest() {
+  log.textContent = 'Running test...\n';
+
+  // This is exactly what the frontend sends
+  const submitData = {
+    id: 'SELL' + Date.now().toString().slice(-6),
+    userId: 'USER' + Math.floor(Math.random() * 10000),
+    userName: '用户' + Math.floor(Math.random() * 10000),
+    harvardCoins: 578,
+    totalAssets: 80,
+    rank: '铂金',
+    safeBox: '6grid',
+    stamina: '5-6',
+    trainingLevel: '4级',
+    rangeLevel: '5级',
+    awmAmmo: 90,
+    level: 80,
+    price: 1409.7560975609756,
+    status: 'pending',
+    submittedAt: new Date().toLocaleString('zh-CN'),
+    region: '微信区',
+    server: '微信',
+    loginType: 'qrcode',
+    knifeSkins: ['信条'],
+    operatorSkins: { '红狼': ['蚀金玫瑰'] },
+    note: '测试',
+    superGuarantee: true,
+    banRecord: '无封禁记录',
+    isOwnFace: true,
+    createdAt: new Date().toLocaleString('zh-CN'),
+    updatedAt: new Date().toLocaleString('zh-CN'),
+    mainInterface: '',
+    warehouse: '',
+    other: ''
+  };
+
+  println('Data to send:');
+  println(JSON.stringify(submitData, null, 2));
+  println('\n--- Sending request ---');
+
+  try {
+    const response = await fetch('/api/sell-accounts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(submitData)
+    });
+
+    println('Status: ' + response.status);
+    println('Status OK: ' + response.ok);
+
+    const text = await response.text();
+    println('Response: ' + text);
+
+    if (!response.ok) {
+      println('ERROR: Request failed!');
+    } else {
+      println('SUCCESS: Request passed!');
+    }
+  } catch (error) {
+    println('EXCEPTION: ' + error.message);
+    println('Error type: ' + error.type);
+  }
+}
+</script>
+</body>
+</html>
