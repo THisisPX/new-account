@@ -480,8 +480,8 @@ const loadAccounts = async () => {
                     <p className="text-primary font-bold text-xs">¥{account.price.toFixed(0)}</p>
                   </td>
                   <td className="px-3 py-3">
-                    <span className={`px-2 py-0.5 rounded-full text-xs ${statusMap[account.status].color}`}>
-                      {statusMap[account.status].label}
+                    <span className={`px-2 py-0.5 rounded-full text-xs ${statusMap[account.status]?.color || 'bg-gray-500/20 text-gray-400'}`}>
+                      {statusMap[account.status]?.label || account.status || '未知'}
                     </span>
                   </td>
                   <td className="px-3 py-3">
@@ -685,8 +685,8 @@ const loadAccounts = async () => {
                   </div>
                   <div className="text-right">
                     <p className="text-gray-400 text-xs">状态</p>
-                    <span className={`px-3 py-1 rounded-full text-sm ${statusMap[selectedAccount.status].color}`}>
-                      {statusMap[selectedAccount.status].label}
+                    <span className={`px-3 py-1 rounded-full text-sm ${statusMap[selectedAccount.status]?.color || 'bg-gray-500/20 text-gray-400'}`}>
+                      {statusMap[selectedAccount.status]?.label || selectedAccount.status || '未知'}
                     </span>
                   </div>
                 </div>
