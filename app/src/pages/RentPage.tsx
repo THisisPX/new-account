@@ -347,17 +347,6 @@ export default function RentPage() {
       );
     }
 
-    // 辅助函数：获取显示用的刀皮列表（优先显示匹配的刀皮）
-    const getDisplayKnifeSkins = (account: Account, filterKnife: string): string[] => {
-      if (filterKnife && filterKnife !== '全部') {
-        const matched = account.knifeSkins.find(k => k === filterKnife);
-        if (matched) {
-          return [matched, ...account.knifeSkins.filter(k => k !== matched)];
-        }
-      }
-      return account.knifeSkins;
-    };
-
     // 训练中心筛选
     if (filters.training !== '全部') {
       result = result.filter(account => account.trainingLevel === filters.training);
@@ -687,6 +676,17 @@ export default function RentPage() {
       </Button>
     </div>
   );
+
+  // 辅助函数：获取显示用的刀皮列表（优先显示匹配的刀皮）
+  const getDisplayKnifeSkins = (account: Account, filterKnife: string): string[] => {
+    if (filterKnife && filterKnife !== '全部') {
+      const matched = account.knifeSkins.find(k => k === filterKnife);
+      if (matched) {
+        return [matched, ...account.knifeSkins.filter(k => k !== matched)];
+      }
+    }
+    return account.knifeSkins;
+  };
 
   return (
     <div ref={pageRef} className="min-h-screen bg-black pt-16 sm:pt-20">
