@@ -233,12 +233,12 @@ export function calculateRecyclePrice(
     details.push('大额账号(≥300M): +2');
   }
 
-  // 靶场等级 <= 5级时，比例减1
+  // 靶场等级 <= 5级时，比例加1
   let rangeLevelAdjustment = 0;
   const rangeLevelNum = parseInt(rangeLevel.replace('级', ''));
   if (rangeLevelNum <= 5) {
-    rangeLevelAdjustment = -1;
-    details.push(`靶场等级≤5级: -1`);
+    rangeLevelAdjustment = 1;
+    details.push(`靶场等级≤5级: +1`);
   }
 
   const finalRatio = base - skinDiscount + largeAmountAdjustment + rangeLevelAdjustment;
