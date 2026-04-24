@@ -37,7 +37,11 @@ import { rentAccountApi } from '@/api';
 // 筛选选项数据（与主页租号页面一致）
 const filterOptions = {
   ranks: ['青铜', '白银', '黄金', '铂金', '钻石', '黑鹰', '三角洲巅峰'],
-  safes: ['1×2基础安全箱', '2×2进阶安全箱', '2×3高级保险箱', '3×3顶级安全箱'],
+  safes: [
+    { value: '9grid', label: '3×3顶级安全箱' },
+    { value: '6grid', label: '2×3高级保险箱' },
+    { value: 'other', label: '其它安全箱' },
+  ],
   knives: ['暗星', '信条', '赤霄', '怜悯', '龙牙', '影锋', '黑海', '北极星', '电锯惊魂'],
   trainingLevels: ['1级', '2级', '3级', '4级', '5级', '6级', '7级'],
   rangeLevels: ['1级', '2级', '3级', '4级', '5级', '6级', '7级'],
@@ -595,7 +599,7 @@ function AddAccountForm({ onClose, onSuccess }: { onClose: () => void; onSuccess
               </SelectTrigger>
               <SelectContent className="bg-gray-900 border-white/10">
                 {filterOptions.safes.map((s) => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
